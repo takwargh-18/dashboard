@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="th" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Performance Dashboard</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+        * { font-family: 'Noto Sans Thai', 'Space Grotesk', sans-serif; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+        }
+        
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+        .animate-gradient { 
+            background-size: 200% 200%;
+            animation: gradient-shift 8s ease infinite;
+        }
+        .animate-slide-up { animation: slide-up 0.7s ease-out forwards; opacity: 0; }
+        .animate-glow { animation: glow-pulse 2s ease-in-out infinite; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        }
+        
+        .dark-glass {
+            background: rgba(83, 91, 110, 0.95);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: 0 20px 50px rgba(59, 130, 246, 0.3);
+        }
+        
+        .progress-bar {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        .blob {
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .chart-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(135deg, #2563eb, #7c3aed); }
+        
+        .stat-number {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-slate-900 text-white overflow-auto">
+  <!-- Animated Background -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+   <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500/20 blob animate-float" style="filter: blur(80px);"></div>
+   <div class="absolute bottom-0 right-0 w-80 h-80 bg-purple-500/20 blob animate-float" style="filter: blur(80px); animation-delay: -1.5s;"></div>
+   <div class="absolute top-1/2 left-1/2 w-72 h-72 bg-pink-500/10 blob animate-float" style="filter: blur(80px); animation-delay: -3s;"></div>
+  </div>
+  <div class="relative z-10 min-h-full p-4 md:p-8">
+   <!-- Header Section -->
+   <header class="max-w-7xl mx-auto mb-8 animate-slide-up">
+    <div class="dark-glass rounded-3xl p-6 md:p-8">
+     <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-4">
+       <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-pulse-glow">
+        <i data-lucide="activity" class="w-8 h-8 text-white"></i>
+       </div>
+       <div>
+        <h1 id="hospitalName" class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">โรงพยาบาลพยาบาลสถานพระบารมี</h1>
+        <p class="text-slate-400 flex items-center gap-2 mt-1"><i data-lucide="calendar" class="w-4 h-4"></i> <span>ปีงบประมาณ <span id="fiscalYear" class="text-blue-400 font-semibold">2569</span></span></p>
+       </div>
+      </div>
+      <div class="flex items-center gap-4">
+       <div class="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30">
+        <span class="text-emerald-400 flex items-center gap-2"> <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> ข้อมูลล่าสุด: <span id="latestMonth" class="font-semibold">มีนาคม 2569</span> </span>
+       </div>
+      </div>
+     </div>
+    </div>
+   </header>
+   
+   <!-- Quick Stats Row -->
+   <!-- <div class="max-w-7xl mx-auto mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.1s;">
+      <div class="flex items-center gap-3">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+        <i data-lucide="users" class="w-6 h-6 text-white"></i>
+       </div>
+       <div>
+        <p class="text-slate-400 text-sm">ผู้ป่วยทั้งหมด</p>
+        <p class="text-2xl font-bold text-white">12,458</p>
+       </div>
+      </div>
+     </div>
+     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.2s;">
+      <div class="flex items-center gap-3">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
+        <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
+       </div>
+       <div>
+        <p class="text-slate-400 text-sm">อัตราการรักษา</p>
+        <p class="text-2xl font-bold text-emerald-400">94.5%</p>
+       </div>
+      </div>
+     </div>
+     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.3s;">
+      <div class="flex items-center gap-3">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+        <i data-lucide="bed" class="w-6 h-6 text-white"></i>
+       </div>
+       <div>
+        <p class="text-slate-400 text-sm">เตียงว่าง</p>
+        <p class="text-2xl font-bold text-purple-400">42</p>
+       </div>
+      </div>
+     </div>
+     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.4s;">
+      <div class="flex items-center gap-3">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+        <i data-lucide="clock" class="w-6 h-6 text-white"></i>
+       </div>
+       <div>
+        <p class="text-slate-400 text-sm">เวลารอเฉลี่ย</p>
+        <p class="text-2xl font-bold text-amber-400">18 นาที</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div> --> <!-- บล็อคข้อมูลยังไม่ใช้ แต่ในอนาคตใช้เป็นแยกสิทธิ์ -->
+   
+   <!-- Main Dashboard Grid -->
+   <div class="max-w-7xl mx-auto mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+     <!-- OPD Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20 animate-slide-up" style="animation-delay: 0.1s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+         <i data-lucide="user-check" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">OPD</h3>
+         <p class="text-sm text-slate-500">ผู้ป่วยนอก</p>
+        </div>
+       </div>
+       <div id="trendOPD"></div>
+      </div>
+      <div class="mb-4">
+       <span id="valueOPD" class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ครั้ง</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartOPD"></canvas>
+      </div>
+     </div><!-- ER Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-orange-500/20 animate-slide-up" style="animation-delay: 0.2s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
+         <i data-lucide="siren" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">ER</h3>
+         <p class="text-sm text-slate-500">ฉุกเฉิน</p>
+        </div>
+       </div>
+       <div id="trendER"></div>
+      </div>
+      <div class="mb-4">
+       <span id="valueER" class="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ครั้ง</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartER"></canvas>
+      </div>
+     </div><!-- IPD Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-green-500/20 animate-slide-up" style="animation-delay: 0.3s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/30">
+         <i data-lucide="bed" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">IPD</h3>
+         <p class="text-sm text-slate-500">ผู้ป่วยใน</p>
+        </div>
+       </div>
+       <div id="trendIPD"></div>
+      </div>
+      <div class="mb-4">
+       <span id="valueIPD" class="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ราย</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartIPD"></canvas>
+      </div>
+     </div><!-- LR Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20 animate-slide-up" style="animation-delay: 0.4s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+         <i data-lucide="heart" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">LR</h3>
+         <p class="text-sm text-slate-500">คลอด</p>
+        </div>
+       </div>
+       <div id="trendLR"></div>
+      </div>
+      <div class="mb-4">
+       <span id="valueLR" class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ราย</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartLR"></canvas>
+      </div>
+     </div><!-- Death Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-red-500/20 animate-slide-up" style="animation-delay: 0.5s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+         <i data-lucide="alert-triangle" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">Death</h3>
+         <p class="text-sm text-slate-500">เสียชีวิต/ชันสูตร</p>
+        </div>
+       </div>
+       <div id="trendDeath"></div>
+      </div>
+      <div class="mb-4">
+       <span id="valueDeath" class="text-4xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ราย</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartDeath"></canvas>
+      </div>
+     </div><!-- Refer Out Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-yellow-500/20 animate-slide-up" style="animation-delay: 0.6s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/30">
+         <i data-lucide="send" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">Refer Out</h3>
+         <p class="text-sm text-slate-500">ส่งต่อ</p>
+        </div>
+       </div>
+       <div id="trendRefer"></div>
+      </div>
+      <div class="mb-4">
+       <span id="valueRefer"class="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ราย</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartRefer"></canvas>
+      </div>
+     </div><!-- Dental Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/20 animate-slide-up" style="animation-delay: 0.7s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+         <i data-lucide="smile" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">ทันตกรรม</h3>
+         <p class="text-sm text-slate-500">ทันตกรรม</p>
+        </div>
+       </div>
+       <div id="trendDental"></div>
+      </div>
+      <div class="mb-4">
+       <span id="valueDental" class="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ครั้ง</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartDental"></canvas>
+      </div>
+     </div><!-- Physical Therapy Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-teal-500/20 animate-slide-up" style="animation-delay: 0.8s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-teal-500/30">
+         <i data-lucide="activity" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">กายภาพ</h3>
+         <p class="text-sm text-slate-500">บำบัด</p>
+        </div>
+       </div>
+       <div id="trendPhysical"></div>
+      </div>
+      <div class="mb-4">
+       <span id="valuePhysical"class="text-4xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">คน</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartPhysical"></canvas>
+      </div>
+     </div><!-- Thai Medicine Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-lime-500/20 animate-slide-up" style="animation-delay: 0.9s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-500 to-green-600 flex items-center justify-center shadow-lg shadow-lime-500/30">
+         <i data-lucide="leaf" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">แพทย์แผนไทย</h3>
+         <p class="text-sm text-slate-500">ฯ</p>
+        </div>
+       </div>
+       <div id="trendThai"></div>
+      </div>
+      <div class="mb-4">
+       <span id='valueThai' class="text-4xl font-bold bg-gradient-to-r from-lime-600 to-green-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">คน</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartThai"></canvas>
+      </div>
+     </div>
+    </div>
+   </div>
+
+   <!-- Physical Therapy Services History Table -->
+    
+   <div class="max-w-7xl mx-auto mb-8 px-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <div class="dark-glass rounded-3xl p-6 animate-slide-up" style="animation-delay: 1s;">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center">
+                    <i data-lucide="activity" class="w-5 h-5 text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">จำนวนบริการกายภาพบำบัด</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <thead>
+        <tr class="border-b border-slate-700">
+         <th class="text-left py-3 px-4 text-slate-400 font-medium">ประเภทการรักษา</th>
+         <!-- <th class="text-center py-3 px-4 text-slate-400 font-medium">พ.ย. 68</th> -->
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ธ.ค. 68</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ม.ค. 69</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ก.พ. 69</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">มี.ค. 69</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">เม.ย. 69</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การดัดดึงข้อต่อ</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">201</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">190</td>
+         <td class="text-center py-3 px-4 text-slate-300">177</td>
+         <td class="text-center py-3 px-4 text-slate-300">203</td>
+         <td class="text-center py-3 px-4 text-slate-300">252</td>
+         <td class="text-center py-3 px-4 text-slate-400 font-semibold">177</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การรักษาด้วยคลื่นเสียง</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">201</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">194</td>
+         <td class="text-center py-3 px-4 text-slate-300">168</td>
+         <td class="text-center py-3 px-4 text-slate-300">207</td>
+         <td class="text-center py-3 px-4 text-slate-300">254</td>
+         <td class="text-center py-3 px-4 text-slate-400 font-semibold">168</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การกระตุ้นด้วยกระแสไฟฟ้า</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">51</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">62</td>
+         <td class="text-center py-3 px-4 text-slate-300">32</td>
+         <td class="text-center py-3 px-4 text-slate-300">68</td>
+         <td class="text-center py-3 px-4 text-slate-300">68</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">32</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การแช่พาราฟิน</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">4</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">16</td>
+         <td class="text-center py-3 px-4 text-slate-300">10</td>
+         <td class="text-center py-3 px-4 text-slate-300">14</td>
+         <td class="text-center py-3 px-4 text-slate-300">16</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">10</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การดึงหลังด้วยเครื่อง</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">186</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">187</td>
+         <td class="text-center py-3 px-4 text-slate-300">150</td>
+         <td class="text-center py-3 px-4 text-slate-300">201</td>
+         <td class="text-center py-3 px-4 text-slate-300">252</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">150</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การกดจุดและการนวด</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">198</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">194</td>
+         <td class="text-center py-3 px-4 text-slate-300">162</td>
+         <td class="text-center py-3 px-4 text-slate-300">203</td>
+         <td class="text-center py-3 px-4 text-slate-300">257</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">162</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การดึงคอด้วยเครื่อง</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">12</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">14</td>
+         <td class="text-center py-3 px-4 text-slate-300">9</td>
+         <td class="text-center py-3 px-4 text-slate-300">21</td>
+         <td class="text-center py-3 px-4 text-slate-300">20</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">9</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">Passive Movement</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">97</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">82</td>
+         <td class="text-center py-3 px-4 text-slate-300">75</td>
+         <td class="text-center py-3 px-4 text-slate-300">81</td>
+         <td class="text-center py-3 px-4 text-slate-300">100</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">75</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">สอนญาติและผู้ป่วยปฏิบัติตนที่บ้าน</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">192</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">194</td>
+         <td class="text-center py-3 px-4 text-slate-300">165</td>
+         <td class="text-center py-3 px-4 text-slate-300">210</td>
+         <td class="text-center py-3 px-4 text-slate-300">261</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">1654</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การประคบด้วยแผ่นความร้อน</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">188</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">188</td>
+         <td class="text-center py-3 px-4 text-slate-300">146</td>
+         <td class="text-center py-3 px-4 text-slate-300">195</td>
+         <td class="text-center py-3 px-4 text-slate-300">248</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">146</td>
+        </tr>
+        <tr class="bg-slate-800/50">
+         <td class="py-3 px-4 text-white font-bold">รวมบริการทั้งหมด</td>
+         <!-- <td class="text-center py-3 px-4 text-white font-bold">1,330</td> -->
+         <td class="text-center py-3 px-4 text-white font-bold">1,321</td>
+         <td class="text-center py-3 px-4 text-white font-bold">1,094</td>
+         <td class="text-center py-3 px-4 text-white font-bold">1,403</td>
+         <td class="text-center py-3 px-4 text-white font-bold">1,728</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-bold text-lg">1,094</td>
+        </tr>
+       </tbody>
+        </table>
+        </div>
+        </div>
+
+
+          <!-- Thai Medicine Services History Table -->
+
+        <div class="dark-glass rounded-3xl p-6 animate-slide-up" style="animation-delay: 1.05s;">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-lime-600 flex items-center justify-center">
+                    <i data-lucide="leaf" class="w-5 h-5 text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">จำนวนบริการแพทย์แผนไทย</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+        <tr class="border-b border-slate-700">
+         <th class="text-left py-3 px-4 text-slate-400 font-medium">ประเภทการรักษา</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ธ.ค. 68</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ม.ค. 69</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ก.พ. 69</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">มี.ค. 69</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">เม.ย. 69</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">จ่ายยาสมุนไพร</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">94</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">83</td>
+         <td class="text-center py-3 px-4 text-slate-300">76</td>
+         <td class="text-center py-3 px-4 text-slate-300">94</td>
+         <td class="text-center py-3 px-4 text-slate-300">118</td>
+         <td class="text-center py-3 px-4 text-green-400 font-semibold">76</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">นวดและประคบสมุนไพร</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">106</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">106</td>
+         <td class="text-center py-3 px-4 text-slate-300">111</td>
+         <td class="text-center py-3 px-4 text-slate-300">122</td>
+         <td class="text-center py-3 px-4 text-slate-300">138</td>
+         <td class="text-center py-3 px-4 text-green-400 font-semibold">111</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">อบไอน้ำสมุนไพร</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">28</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">37</td>
+         <td class="text-center py-3 px-4 text-slate-300">52</td>
+         <td class="text-center py-3 px-4 text-slate-300">57</td>
+         <td class="text-center py-3 px-4 text-slate-300">85</td>
+         <td class="text-center py-3 px-4 text-green-400 font-semibold">52</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">พอกเข่า</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">4</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">5</td>
+         <td class="text-center py-3 px-4 text-slate-300">2</td>
+         <td class="text-center py-3 px-4 text-slate-300">1</td>
+         <td class="text-center py-3 px-4 text-slate-300">1</td>
+         <td class="text-center py-3 px-4 text-green-400 font-semibold">2</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">ชุดหัตถการสำหรับแม่หลังคลอด</td>
+         <!-- <td class="text-center py-3 px-4 text-slate-300">3</td> -->
+         <td class="text-center py-3 px-4 text-slate-300">0</td>
+         <td class="text-center py-3 px-4 text-slate-300">0</td>
+         <td class="text-center py-3 px-4 text-slate-300">7</td>
+         <td class="text-center py-3 px-4 text-slate-300">5</td>
+         <td class="text-center py-3 px-4 text-green-400 font-semibold">0</td>
+        </tr>
+        <tr class="bg-slate-800/50">
+         <td class="py-3 px-4 text-white font-bold">รวมบริการทั้งหมด</td>
+         <!-- <td class="text-center py-3 px-4 text-white font-bold">235</td> -->
+         <td class="text-center py-3 px-4 text-white font-bold">231</td>
+         <td class="text-center py-3 px-4 text-white font-bold">241</td>
+         <td class="text-center py-3 px-4 text-white font-bold">281</td>
+         <td class="text-center py-3 px-4 text-white font-bold">347</td>
+         <td class="text-center py-3 px-4 text-green-400 font-bold text-lg">241</td>
+        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+   <!-- Footer -->
+   <footer class="max-w-7xl mx-auto text-center py-6 animate-slide-up" style="animation-delay: 1s;">
+    <p class="text-slate-500 text-sm">© 2569 Phrayabalsathanprabaramee Hospital Dashboard </p>
+   </footer>
+  </div>
+<script>
+
+// ================= CONFIG DATA =================
+const rawData = [
+    { m: 'ธ.ค. 68', opd:2818, er:1346, ipd:238, lr:6, death:3, refer:143, dental:293, physical:196, thai:105 },
+    { m: 'ม.ค. 69', opd:2583, er:1251, ipd:205, lr:2, death:1, refer:137, dental:318, physical:192, thai:113 },
+    { m: 'ก.พ. 69', opd:3238, er:1261, ipd:211, lr:2, death:1, refer:120, dental:496, physical:210, thai:126 },
+    { m: 'มี.ค. 69', opd:2840, er:1242, ipd:209, lr:2, death:4, refer:118, dental:396, physical:266, thai:134 },
+    { m: 'เม.ย. 69', opd:2624, er:1176, ipd:257, lr:2, death:3, refer:90, dental:361, physical:192, thai:113 }
+
+    // 👉 เพิ่มเดือนใหม่ตรงนี้เท่านั้น
+    // { m: 'เม.ย. 69', opd:3000, er:1300, ipd:220, lr:3, death:2, refer:110, dental:410, physical:280, thai:150 }
+];
+
+// ================= AUTO SLIDE 5 MONTH =================
+const last5 = rawData.slice(-5);
+
+const labels = last5.map(d => d.m);
+
+function mapData(key){
+    return last5.map(d => d[key]);
+}
+
+// ================= UTIL =================
+function getLatest(arr){
+    return arr[arr.length-1];
+}
+
+function getPercent(arr){
+    const last = arr[arr.length-1];
+    const prev = arr[arr.length-2];
+    if(prev === 0) return 0;
+    return ((last-prev)/prev*100).toFixed(1);
+}
+
+function setTrend(el, percent){
+    let icon='trending-up', color='text-emerald-600 bg-emerald-100';
+    if(percent < 0){ icon='trending-down'; color='text-red-600 bg-red-100'; }
+    if(percent == 0){ icon='minus'; color='text-gray-600 bg-gray-100'; }
+
+    el.className = `flex items-center gap-1 px-2 py-1 rounded-full ${color} text-sm`;
+    el.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${percent>0?'+':''}${percent}%`;
+}
+
+// ================= CHART =================
+function createGradient(ctx,c1,c2){
+    const g=ctx.createLinearGradient(0,0,0,150);
+    g.addColorStop(0,c1);
+    g.addColorStop(1,c2);
+    return g;
+}
+
+function createChart(id,data,color){
+    const el = document.getElementById(id);
+    if(!el) return;
+
+    const ctx = el.getContext('2d');
+
+    new Chart(ctx,{
+        type:'line',
+        data:{
+            labels,
+            datasets:[{
+                data,
+                borderColor:color,
+                backgroundColor:createGradient(ctx,color.replace('1)','0.3)'),color.replace('1)','0)')),
+                fill:true,
+                tension:0.4,
+                pointRadius:4
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{legend:{display:false}}
+        }
+    });
+}
+
+// ================= INIT =================
+function init(){
+
+    const map = [
+        ['opd','valueOPD','trendOPD','chartOPD','rgba(59,130,246,1)'],
+        ['er','valueER','trendER','chartER','rgba(249,115,22,1)'],
+        ['ipd','valueIPD','trendIPD','chartIPD','rgba(16,185,129,1)'],
+        ['lr','valueLR','trendLR','chartLR','rgba(168,85,247,1)'],
+        ['death','valueDeath','trendDeath','chartDeath','rgba(220,38,38,1)'],
+        ['refer','valueRefer','trendRefer','chartRefer','rgba(234,179,8,1)'],
+        ['dental','valueDental','trendDental','chartDental','rgba(6,182,212,1)'],
+        ['physical','valuePhysical','trendPhysical','chartPhysical','rgba(20,184,166,1)'],
+        ['thai','valueThai','trendThai','chartThai','rgba(34,197,94,1)'],
+    ];
+
+    map.forEach(([key,valId,trendId,chartId,color])=>{
+        const data = mapData(key);
+
+        // value
+        const valEl = document.getElementById(valId);
+        if(valEl) valEl.innerText = getLatest(data).toLocaleString();
+
+        // trend
+        const trendEl = document.getElementById(trendId);
+        if(trendEl) setTrend(trendEl, getPercent(data));
+
+        // chart
+        createChart(chartId, data, color);
+    });
+
+    // update เดือนล่าสุด
+    document.getElementById('latestMonth').innerText = labels[labels.length-1];
+
+    lucide.createIcons();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</html>
