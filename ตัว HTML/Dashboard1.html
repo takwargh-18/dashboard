@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="th" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Performance Dashboard</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+        * { font-family: 'Noto Sans Thai', 'Space Grotesk', sans-serif; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+        }
+        
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+        .animate-gradient { 
+            background-size: 200% 200%;
+            animation: gradient-shift 8s ease infinite;
+        }
+        .animate-slide-up { animation: slide-up 0.7s ease-out forwards; opacity: 0; }
+        .animate-glow { animation: glow-pulse 2s ease-in-out infinite; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        }
+        
+        .dark-glass {
+            background: rgba(83, 91, 110, 0.95);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: 0 20px 50px rgba(59, 130, 246, 0.3);
+        }
+        
+        .progress-bar {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        .blob {
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .chart-container {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(135deg, #2563eb, #7c3aed); }
+        
+        .stat-number {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-slate-900 text-white overflow-auto">
+  <!-- Animated Background -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+   <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500/20 blob animate-float" style="filter: blur(80px);"></div>
+   <div class="absolute bottom-0 right-0 w-80 h-80 bg-purple-500/20 blob animate-float" style="filter: blur(80px); animation-delay: -1.5s;"></div>
+   <div class="absolute top-1/2 left-1/2 w-72 h-72 bg-pink-500/10 blob animate-float" style="filter: blur(80px); animation-delay: -3s;"></div>
+  </div>
+  <div class="relative z-10 min-h-full p-4 md:p-8">
+   <!-- Header Section -->
+   <header class="max-w-7xl mx-auto mb-8 animate-slide-up">
+    <div class="dark-glass rounded-3xl p-6 md:p-8">
+     <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-4">
+       <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center animate-pulse-glow">
+        <i data-lucide="activity" class="w-8 h-8 text-white"></i>
+       </div>
+       <div>
+        <h1 id="hospitalName" class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">โรงพยาบาลพยาบาลสถานพระบารมี</h1>
+        <p class="text-slate-400 flex items-center gap-2 mt-1"><i data-lucide="calendar" class="w-4 h-4"></i> <span>ปีงบประมาณ <span id="fiscalYear" class="text-blue-400 font-semibold">2569</span></span></p>
+       </div>
+      </div>
+      <div class="flex items-center gap-4">
+       <div class="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30">
+        <span class="text-emerald-400 flex items-center gap-2"> <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> ข้อมูลล่าสุด: <span id="latestMonth" class="font-semibold">กุมภาพันธ์ 2569</span> </span>
+       </div>
+      </div>
+     </div>
+    </div>
+   </header>
+   
+   <!-- Quick Stats Row -->
+   <!-- <div class="max-w-7xl mx-auto mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.1s;">
+      <div class="flex items-center gap-3">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+        <i data-lucide="users" class="w-6 h-6 text-white"></i>
+       </div>
+       <div>
+        <p class="text-slate-400 text-sm">ผู้ป่วยทั้งหมด</p>
+        <p class="text-2xl font-bold text-white">12,458</p>
+       </div>
+      </div>
+     </div>
+     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.2s;">
+      <div class="flex items-center gap-3">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
+        <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
+       </div>
+       <div>
+        <p class="text-slate-400 text-sm">อัตราการรักษา</p>
+        <p class="text-2xl font-bold text-emerald-400">94.5%</p>
+       </div>
+      </div>
+     </div>
+     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.3s;">
+      <div class="flex items-center gap-3">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+        <i data-lucide="bed" class="w-6 h-6 text-white"></i>
+       </div>
+       <div>
+        <p class="text-slate-400 text-sm">เตียงว่าง</p>
+        <p class="text-2xl font-bold text-purple-400">42</p>
+       </div>
+      </div>
+     </div>
+     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.4s;">
+      <div class="flex items-center gap-3">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+        <i data-lucide="clock" class="w-6 h-6 text-white"></i>
+       </div>
+       <div>
+        <p class="text-slate-400 text-sm">เวลารอเฉลี่ย</p>
+        <p class="text-2xl font-bold text-amber-400">18 นาที</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div> --> <!-- บล็อคข้อมูลยังไม่ใช้ แต่ในอนาคตใช้เป็นแยกสิทธิ์ -->
+   
+   <!-- Main Dashboard Grid -->
+   <div class="max-w-7xl mx-auto mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+     <!-- OPD Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20 animate-slide-up" style="animation-delay: 0.1s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+         <i data-lucide="user-check" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">OPD</h3>
+         <p class="text-sm text-slate-500">ผู้ป่วยนอก</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-600 text-sm">
+        <i data-lucide="trending-up" class="w-4 h-4"></i> +25%
+       </div>
+      </div>
+      <div class="mb-4">
+       <span class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">3,238</span> <span class="text-slate-500 ml-2">ครั้ง</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartOPD"></canvas>
+      </div>
+     </div><!-- ER Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-orange-500/20 animate-slide-up" style="animation-delay: 0.2s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
+         <i data-lucide="siren" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">ER</h3>
+         <p class="text-sm text-slate-500">ฉุกเฉิน</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-600 text-sm">
+        <i data-lucide="trending-down" class="w-4 h-4"></i> -0.8%
+       </div>
+      </div>
+      <div class="mb-4">
+       <span class="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">1,261</span> <span class="text-slate-500 ml-2">ครั้ง</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartER"></canvas>
+      </div>
+     </div><!-- IPD Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-green-500/20 animate-slide-up" style="animation-delay: 0.3s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/30">
+         <i data-lucide="bed" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">IPD</h3>
+         <p class="text-sm text-slate-500">ผู้ป่วยใน</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-600 text-sm">
+        <i data-lucide="trending-up" class="w-4 h-4"></i> +2.9%
+       </div>
+      </div>
+      <div class="mb-4">
+       <span class="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">211</span> <span class="text-slate-500 ml-2">ราย</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartIPD"></canvas>
+      </div>
+     </div><!-- LR Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20 animate-slide-up" style="animation-delay: 0.4s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+         <i data-lucide="heart" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">LR</h3>
+         <p class="text-sm text-slate-500">คลอด</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-100 text-purple-600 text-sm">
+        <i data-lucide="minus" class="w-4 h-4"></i> 0%
+       </div>
+      </div>
+      <div class="mb-4">
+       <span class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">2</span> <span class="text-slate-500 ml-2">ราย</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartLR"></canvas>
+      </div>
+     </div><!-- Death Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-red-500/20 animate-slide-up" style="animation-delay: 0.5s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+         <i data-lucide="alert-triangle" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">Death</h3>
+         <p class="text-sm text-slate-500">เสียชีวิต/ชันสูตร</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 text-red-600 text-sm">
+        <i data-lucide="minus" class="w-4 h-4"></i> 0%
+       </div>
+      </div>
+      <div class="mb-4">
+       <span class="text-4xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">1</span> <span class="text-slate-500 ml-2">ราย</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartDeath"></canvas>
+      </div>
+     </div><!-- Refer Out Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-yellow-500/20 animate-slide-up" style="animation-delay: 0.6s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/30">
+         <i data-lucide="send" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">Refer Out</h3>
+         <p class="text-sm text-slate-500">ส่งต่อ</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-600 text-sm">
+        <i data-lucide="trending-down" class="w-4 h-4"></i> -12.4%
+       </div>
+      </div>
+      <div class="mb-4">
+       <span class="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">120</span> <span class="text-slate-500 ml-2">ราย</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartRefer"></canvas>
+      </div>
+     </div><!-- Dental Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/20 animate-slide-up" style="animation-delay: 0.7s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+         <i data-lucide="smile" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">ทันตกรรม</h3>
+         <p class="text-sm text-slate-500">ทันตกรรม</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-sm">
+        <i data-lucide="trending-up" class="w-4 h-4"></i> +55.97%
+       </div>
+      </div>
+      <div class="mb-4">
+       <span class="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">496</span> <span class="text-slate-500 ml-2">ครั้ง</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartDental"></canvas>
+      </div>
+     </div><!-- Physical Therapy Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-teal-500/20 animate-slide-up" style="animation-delay: 0.8s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-teal-500/30">
+         <i data-lucide="activity" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">กายภาพ</h3>
+         <p class="text-sm text-slate-500">บำบัด</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-600 text-sm">
+        <i data-lucide="trending-up" class="w-4 h-4"></i> +9.4%
+       </div>
+      </div>
+      <div class="mb-4">
+       <span class="text-4xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">210</span> <span class="text-slate-500 ml-2">คน</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartPhysical"></canvas>
+      </div>
+     </div><!-- Thai Medicine Card -->
+     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-lime-500/20 animate-slide-up" style="animation-delay: 0.9s;">
+      <div class="flex items-center justify-between mb-4">
+       <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-500 to-green-600 flex items-center justify-center shadow-lg shadow-lime-500/30">
+         <i data-lucide="leaf" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-slate-800">แพทย์แผนไทย</h3>
+         <p class="text-sm text-slate-500">ฯ</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-600 text-sm">
+        <i data-lucide="trending-up" class="w-4 h-4"></i> +11.5%
+       </div>
+      </div>
+      <div class="mb-4">
+       <span class="text-4xl font-bold bg-gradient-to-r from-lime-600 to-green-600 bg-clip-text text-transparent">126</span> <span class="text-slate-500 ml-2">คน</span>
+      </div>
+      <div class="h-32">
+       <canvas id="chartThai"></canvas>
+      </div>
+     </div>
+    </div>
+   </div>
+
+   <!-- Physical Therapy Services History Table -->
+    
+   <div class="max-w-7xl mx-auto mb-8 px-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <div class="dark-glass rounded-3xl p-6 animate-slide-up" style="animation-delay: 1s;">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center">
+                    <i data-lucide="activity" class="w-5 h-5 text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">ประวัติกายภาพบำบัด</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <thead>
+        <tr class="border-b border-slate-700">
+         <th class="text-left py-3 px-4 text-slate-400 font-medium">ประเภทการรักษา</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ต.ค. 68</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">พ.ย. 68</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ธ.ค. 68</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ม.ค. 69</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ก.พ. 69</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การดัดดึงข้อต่อ</td>
+         <td class="text-center py-3 px-4 text-slate-300">216</td>
+         <td class="text-center py-3 px-4 text-slate-300">201</td>
+         <td class="text-center py-3 px-4 text-slate-300">190</td>
+         <td class="text-center py-3 px-4 text-slate-300">177</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">203</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การรักษาด้วยคลื่นเสียง</td>
+         <td class="text-center py-3 px-4 text-slate-300">68</td>
+         <td class="text-center py-3 px-4 text-slate-300">201</td>
+         <td class="text-center py-3 px-4 text-slate-300">194</td>
+         <td class="text-center py-3 px-4 text-slate-300">168</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">207</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การกระตุ้นด้วยกระแสไฟฟ้า</td>
+         <td class="text-center py-3 px-4 text-slate-300">212</td>
+         <td class="text-center py-3 px-4 text-slate-300">51</td>
+         <td class="text-center py-3 px-4 text-slate-300">62</td>
+         <td class="text-center py-3 px-4 text-slate-300">32</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">68</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การแช่พาราฟิน</td>
+         <td class="text-center py-3 px-4 text-slate-300">15</td>
+         <td class="text-center py-3 px-4 text-slate-300">4</td>
+         <td class="text-center py-3 px-4 text-slate-300">16</td>
+         <td class="text-center py-3 px-4 text-slate-300">10</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">14</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การดึงหลังด้วยเครื่อง</td>
+         <td class="text-center py-3 px-4 text-slate-300">99</td>
+         <td class="text-center py-3 px-4 text-slate-300">186</td>
+         <td class="text-center py-3 px-4 text-slate-300">187</td>
+         <td class="text-center py-3 px-4 text-slate-300">150</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">201</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การกดจุดและการนวด</td>
+         <td class="text-center py-3 px-4 text-slate-300">204</td>
+         <td class="text-center py-3 px-4 text-slate-300">198</td>
+         <td class="text-center py-3 px-4 text-slate-300">194</td>
+         <td class="text-center py-3 px-4 text-slate-300">162</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">203</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การดึงคอด้วยเครื่อง</td>
+         <td class="text-center py-3 px-4 text-slate-300">22</td>
+         <td class="text-center py-3 px-4 text-slate-300">12</td>
+         <td class="text-center py-3 px-4 text-slate-300">14</td>
+         <td class="text-center py-3 px-4 text-slate-300">9</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">21</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">Passive Movement</td>
+         <td class="text-center py-3 px-4 text-slate-300">212</td>
+         <td class="text-center py-3 px-4 text-slate-300">97</td>
+         <td class="text-center py-3 px-4 text-slate-300">82</td>
+         <td class="text-center py-3 px-4 text-slate-300">75</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">81</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">สอนญาติและผู้ป่วยปฏิบัติตนที่บ้าน</td>
+         <td class="text-center py-3 px-4 text-slate-300">214</td>
+         <td class="text-center py-3 px-4 text-slate-300">192</td>
+         <td class="text-center py-3 px-4 text-slate-300">194</td>
+         <td class="text-center py-3 px-4 text-slate-300">165</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">210</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">การประคบด้วยแผ่นความร้อน</td>
+         <td class="text-center py-3 px-4 text-slate-300">216</td>
+         <td class="text-center py-3 px-4 text-slate-300">188</td>
+         <td class="text-center py-3 px-4 text-slate-300">188</td>
+         <td class="text-center py-3 px-4 text-slate-300">146</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-semibold">195</td>
+        </tr>
+        <tr class="bg-slate-800/50">
+         <td class="py-3 px-4 text-white font-bold">รวมบริการทั้งหมด</td>
+         <td class="text-center py-3 px-4 text-white font-bold">1,478</td>
+         <td class="text-center py-3 px-4 text-white font-bold">1,330</td>
+         <td class="text-center py-3 px-4 text-white font-bold">1,321</td>
+         <td class="text-center py-3 px-4 text-white font-bold">1,094</td>
+         <td class="text-center py-3 px-4 text-teal-400 font-bold text-lg">1,403</td>
+        </tr>
+       </tbody>
+        </table>
+        </div>
+        </div>
+
+
+          <!-- Thai Medicine Services History Table -->
+
+        <div class="dark-glass rounded-3xl p-6 animate-slide-up" style="animation-delay: 1.05s;">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-lime-600 flex items-center justify-center">
+                    <i data-lucide="leaf" class="w-5 h-5 text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">ประวัติแพทย์แผนไทย</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+        <tr class="border-b border-slate-700">
+         <th class="text-left py-3 px-4 text-slate-400 font-medium">ประเภทการรักษา</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ต.ค. 68</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">พ.ย. 68</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ธ.ค. 68</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ม.ค. 69</th>
+         <th class="text-center py-3 px-4 text-slate-400 font-medium">ก.พ. 69</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">จ่ายยาสมุนไพร</td>
+         <td class="text-center py-3 px-4 text-slate-300">101</td>
+         <td class="text-center py-3 px-4 text-slate-300">94</td>
+         <td class="text-center py-3 px-4 text-slate-300">83</td>
+         <td class="text-center py-3 px-4 text-slate-300">76</td>
+         <td class="text-center py-3 px-4 text-green-400 font-semibold">94</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">นวดและประคบสมุนไพร</td>
+         <td class="text-center py-3 px-4 text-slate-300">112</td>
+         <td class="text-center py-3 px-4 text-slate-300">106</td>
+         <td class="text-center py-3 px-4 text-slate-300">106</td>
+         <td class="text-center py-3 px-4 text-slate-300">111</td>
+         <td class="text-center py-3 px-4 text-green-400 font-semibold">122</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">อบไอน้ำสมุนไพร</td>
+         <td class="text-center py-3 px-4 text-slate-300">34</td>
+         <td class="text-center py-3 px-4 text-slate-300">28</td>
+         <td class="text-center py-3 px-4 text-slate-300">37</td>
+         <td class="text-center py-3 px-4 text-slate-300">52</td>
+         <td class="text-center py-3 px-4 text-green-400 font-semibold">57</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">พอกเข่า</td>
+         <td class="text-center py-3 px-4 text-slate-300">12</td>
+         <td class="text-center py-3 px-4 text-slate-300">4</td>
+         <td class="text-center py-3 px-4 text-slate-300">5</td>
+         <td class="text-center py-3 px-4 text-slate-300">2</td>
+         <td class="text-center py-3 px-4 text-green-400 font-semibold">1</td>
+        </tr>
+        <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+         <td class="py-3 px-4 text-white">ชุดหัตถการสำหรับแม่หลังคลอด</td>
+         <td class="text-center py-3 px-4 text-slate-300">8</td>
+         <td class="text-center py-3 px-4 text-slate-300">3</td>
+         <td class="text-center py-3 px-4 text-slate-300">0</td>
+         <td class="text-center py-3 px-4 text-slate-300">0</td>
+         <td class="text-center py-3 px-4 text-green-400 font-semibold">7</td>
+        </tr>
+        <tr class="bg-slate-800/50">
+         <td class="py-3 px-4 text-white font-bold">รวมบริการทั้งหมด</td>
+         <td class="text-center py-3 px-4 text-white font-bold">267</td>
+         <td class="text-center py-3 px-4 text-white font-bold">235</td>
+         <td class="text-center py-3 px-4 text-white font-bold">231</td>
+         <td class="text-center py-3 px-4 text-white font-bold">241</td>
+         <td class="text-center py-3 px-4 text-green-400 font-bold text-lg">281</td>
+        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+   <!-- Footer -->
+   <footer class="max-w-7xl mx-auto text-center py-6 animate-slide-up" style="animation-delay: 1s;">
+    <p class="text-slate-500 text-sm">© 2569 Phrayabalsathanprabaramee Hospital Dashboard </p>
+   </footer>
+  </div>
+  <script>
+        const defaultConfig = {
+            hospital_name: 'โรงพยาบาลพยาบาลสถานพระบารมี',
+            fiscal_year: '2569',
+            latest_month: 'กุมภาพันธ์ 2569',
+            background_color: '#0f172a',
+            card_color: '#ffffff',
+            text_color: '#1e293b',
+            primary_color: '#3b82f6',
+            accent_color: '#8b5cf6',
+            font_family: 'Noto Sans Thai'
+        };
+
+        let config = { ...defaultConfig };
+        const charts = {};
+
+        // Chart configuration
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { 
+                        color: '#94a3b8',
+                        font: { size: 10 }
+                    }
+                },
+                y: {
+                    beginAtZero: true, // กราฟเริ่มจากเลข 0
+                    grid: { 
+                        color: 'rgba(148, 163, 184, 0.1)',
+                        drawBorder: false
+                    },
+                    ticks: { 
+                        color: '#94a3b8',
+                        font: { size: 10 }
+                    }
+                }
+            }
+        };
+
+        const labels = ['ต.ค. 68', 'พ.ย. 68', 'ธ.ค. 68', 'ม.ค. 69', 'ก.พ. 69'];
+
+        function createGradient(ctx, color1, color2) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 150);
+            gradient.addColorStop(0, color1);
+            gradient.addColorStop(1, color2);
+            return gradient;
+        }
+
+        function initCharts() {
+            // OPD Chart
+            const ctxOPD = document.getElementById('chartOPD').getContext('2d');
+            charts.opd = new Chart(ctxOPD, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: [2982, 2409, 2818, 2583, 3238],
+                        borderColor: '#3b82f6',
+                        backgroundColor: createGradient(ctxOPD, 'rgba(59, 130, 246, 0.3)', 'rgba(59, 130, 246, 0)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // IPD Chart
+            const ctxIPD = document.getElementById('chartIPD').getContext('2d');
+            charts.ipd = new Chart(ctxIPD, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: [301, 259, 238, 205, 211],
+                        borderColor: '#10b981',
+                        backgroundColor: createGradient(ctxIPD, 'rgba(16, 185, 129, 0.3)', 'rgba(16, 185, 129, 0)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // ER Chart
+            const ctxER = document.getElementById('chartER').getContext('2d');
+            charts.er = new Chart(ctxER, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: [1455, 1363, 1346, 1251, 1261],
+                        borderColor: '#f97316',
+                        backgroundColor: createGradient(ctxER, 'rgba(249, 115, 22, 0.3)', 'rgba(249, 115, 22, 0)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#f97316',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // LR Chart
+            const ctxLR = document.getElementById('chartLR').getContext('2d');
+            charts.lr = new Chart(ctxLR, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: [4, 6, 6, 2, 2],
+                        borderColor: '#a855f7',
+                        backgroundColor: createGradient(ctxLR, 'rgba(168, 85, 247, 0.3)', 'rgba(168, 85, 247, 0)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#a855f7',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Death Chart
+            const ctxDeath = document.getElementById('chartDeath').getContext('2d');
+            charts.death = new Chart(ctxDeath, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: [0, 1, 3, 1, 1],
+                        borderColor: '#dc2626',
+                        backgroundColor: createGradient(ctxDeath, 'rgba(220, 38, 38, 0.3)', 'rgba(220, 38, 38, 0)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#dc2626',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Refer Out Chart
+            const ctxRefer = document.getElementById('chartRefer').getContext('2d');
+            charts.refer = new Chart(ctxRefer, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: [119, 111, 143, 137, 120],
+                        borderColor: '#eab308',
+                        backgroundColor: createGradient(ctxRefer, 'rgba(234, 179, 8, 0.3)', 'rgba(234, 179, 8, 0)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#eab308',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Dental Chart
+            const ctxDental = document.getElementById('chartDental').getContext('2d');
+            charts.dental = new Chart(ctxDental, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: [364, 325, 293, 318, 496],
+                        borderColor: '#06b6d4',
+                        backgroundColor: createGradient(ctxDental, 'rgba(6, 182, 212, 0.3)', 'rgba(6, 182, 212, 0)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#06b6d4',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Physical Therapy Chart
+            const ctxPhysical = document.getElementById('chartPhysical').getContext('2d');
+            charts.physical = new Chart(ctxPhysical, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: [221, 202, 196, 192, 210],
+                        borderColor: '#14b8a6',
+                        backgroundColor: createGradient(ctxPhysical, 'rgba(20, 184, 166, 0.3)', 'rgba(20, 184, 166, 0)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#14b8a6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+
+            // Thai Medicine Chart
+            const ctxThai = document.getElementById('chartThai').getContext('2d');
+            charts.thai = new Chart(ctxThai, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: [111, 106, 105, 113, 126],
+                        borderColor: '#22c55e',
+                        backgroundColor: createGradient(ctxThai, 'rgba(34, 197, 94, 0.3)', 'rgba(34, 197, 94, 0)'),
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#22c55e',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        async function onConfigChange(newConfig) {
+            const hospitalNameEl = document.getElementById('hospitalName');
+            const fiscalYearEl = document.getElementById('fiscalYear');
+            const latestMonthEl = document.getElementById('latestMonth');
+
+            if (hospitalNameEl) {
+                hospitalNameEl.textContent = newConfig.hospital_name || defaultConfig.hospital_name;
+            }
+            if (fiscalYearEl) {
+                fiscalYearEl.textContent = newConfig.fiscal_year || defaultConfig.fiscal_year;
+            }
+            if (latestMonthEl) {
+                latestMonthEl.textContent = newConfig.latest_month || defaultConfig.latest_month;
+            }
+
+            // Apply font family
+            const fontFamily = newConfig.font_family || defaultConfig.font_family;
+            document.body.style.fontFamily = `${fontFamily}, 'Space Grotesk', sans-serif`;
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [
+                    {
+                        get: () => config.background_color || defaultConfig.background_color,
+                        set: (value) => {
+                            config.background_color = value;
+                            if (window.elementSdk) window.elementSdk.setConfig({ background_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.primary_color || defaultConfig.primary_color,
+                        set: (value) => {
+                            config.primary_color = value;
+                            if (window.elementSdk) window.elementSdk.setConfig({ primary_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.accent_color || defaultConfig.accent_color,
+                        set: (value) => {
+                            config.accent_color = value;
+                            if (window.elementSdk) window.elementSdk.setConfig({ accent_color: value });
+                        }
+                    }
+                ],
+                borderables: [],
+                fontEditable: {
+                    get: () => config.font_family || defaultConfig.font_family,
+                    set: (value) => {
+                        config.font_family = value;
+                        if (window.elementSdk) window.elementSdk.setConfig({ font_family: value });
+                    }
+                },
+                fontSizeable: undefined
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ['hospital_name', config.hospital_name || defaultConfig.hospital_name],
+                ['fiscal_year', config.fiscal_year || defaultConfig.fiscal_year],
+                ['latest_month', config.latest_month || defaultConfig.latest_month]
+            ]);
+        }
+
+        // Initialize
+        if (window.elementSdk) {
+            window.elementSdk.init({
+                defaultConfig,
+                onConfigChange,
+                mapToCapabilities,
+                mapToEditPanelValues
+            });
+            config = window.elementSdk.config || defaultConfig;
+        }
+
+                // For localhost - initialize directly without SDK
+        if (!window.elementSdk) {
+            lucide.createIcons();
+            initCharts();
+            onConfigChange(config);
+        } else {
+            // Initialize Lucide icons and charts
+            lucide.createIcons();
+            initCharts();
+            // Apply initial config
+            onConfigChange(config);
+        }
+
+        // Initialize Lucide icons and charts
+        lucide.createIcons();
+        initCharts();
+
+        // Apply initial config
+        onConfigChange(config);
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9dc8c79ca4a2cdfa',t:'MTc3MzU0ODk5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Performance Dashboard 2569</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            border-left: 5px solid #2c3e50;
+            padding-left: 10px;
+        }
+        .latest-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+        .unit {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            font-weight: normal;
+        }
+        canvas {
+            width: 100% !important;
+            height: 150px !important;
+        }
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+
+        .table-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+        .table-card {
+            background: rgb(255, 255, 255);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f8f9fa;
+            color: #05203b;
+        }
+        .text-left {
+            text-align: left;
+        }
+        .bg-total {
+            background-color: #eee;
+            font-weight: bold;
+        }
+        @media (max-width: 900px) {
+            .table-container { grid-template-columns: 1fr; }
+        }
+
+        .import-section {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .import-section input[type="file"] {
+            padding: 8px;
+            border: 1px dashed #3498db;
+            border-radius: 5px;
+            cursor: pointer;
+            flex-grow: 1;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>โรงพยาบาลพยาบาลสถานพระบารมี ปีงบประมาณ 2569</h1>
+    <p>ข้อมูลล่าสุดประจำเดือน: <strong>กุมภาพันธ์ 2569</strong></p>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-title">OPD (ผู้ป่วยนอก)</div>
+        <div class="latest-value">3,238 <span class="unit">ครั้ง</span></div>
+        <canvas id="chartOPD"></canvas>
+    </div>
+
+    <div class="card">
+        <div class="card-title">ER (ฉุกเฉิน)</div>
+        <div class="latest-value">1,261 <span class="unit">ครั้ง</span></div>
+        <canvas id="chartER"></canvas>
+    </div>
+
+    <div class="card">
+        <div class="card-title">IPD (ผู้ป่วยใน)</div>
+        <div class="latest-value">211 <span class="unit">ครั้ง</span></div>
+        <canvas id="chartIPD"></canvas>
+    </div>
+
+    <div class="card">
+        <div class="card-title">LR (คลอด)</div>
+        <div class="latest-value">2 <span class="unit">ราย</span></div>
+        <canvas id="chartLR"></canvas>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Death (เสียชีวิต)</div>
+        <div class="latest-value">1 <span class="unit">ราย</span></div>
+        <canvas id="chartDeath"></canvas>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Refer Out (ส่งต่อ)</div>
+        <div class="latest-value">120 <span class="unit">ราย</span></div>
+        <canvas id="chartRefer"></canvas>
+    </div>
+
+    <div class="card">
+        <div class="card-title">ทันตกรรม</div>
+        <div class="latest-value">0 <span class="unit">ครั้ง (รอข้อมูล)</span></div>
+        <canvas id="chartDental"></canvas>
+    </div>
+
+    <div class="card">
+        <div class="card-title">กายภาพบำบัด</div>
+        <div class="latest-value">210 <span class="unit">คน</span></div>
+        <canvas id="chartPhysical"></canvas>
+    </div>
+
+    <div class="card">
+        <div class="card-title">แพทย์แผนไทยฯ</div>
+        <div class="latest-value">126 <span class="unit">คน</span></div>
+        <canvas id="chartThai"></canvas>
+    </div>
+</div>
+<div class="table-container">
+    <div class="table-card">
+        <div class="card-title" style="margin-bottom: 15px;">จำนวนผู้รับบริการกายภาพบำบัดแยกตามสิทธิ (คน)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>รายการสิทธิการรักษา</th>
+                    <th>ก.พ. 69</th>
+                    <th>ม.ค. 69</th>
+                    <th>ธ.ค. 68</th>
+                    <th>พ.ย. 68</th>
+                    <th>ต.ค. 68</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td class="text-left">ประกันสุขภาพ (30 บาท)</td><td>28</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                <tr><td class="text-left">ประกันสุขภาพ (ต่างจังหวัด)</td><td>12</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">อสม. และครอบครัว</td><td>20</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">ผู้มีรายได้น้อย</td><td>17</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">ผู้สูงอายุ</td><td>36</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">ผู้พิการ</td><td>7</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">กองทุนประกันสังคมผู้ประกันตน</td><td>15</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">ข้าราชการ</td><td>73</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">ผู้นำชุมชน</td><td>1</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">ท.99 ผู้มีปัญหาระบบสิทธิ</td><td>1</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">ต่างด้าวขึ้นทะเบียน</td><td>0</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">พระภิกษุ นักบวช</td><td>0</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr class="bg-total"><td class="text-left">รวมกายภาพบำบัด</td><td>210</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-card">
+        <div class="card-title" style="margin-bottom: 15px;">รายการบริการกายภาพบำบัด (ครั้ง)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ประเภทการรักษา</th>
+                    <th>ก.พ. 69</th>
+                    <th>ม.ค. 69</th>
+                    <th>ธ.ค. 68</th>
+                    <th>พ.ย. 68</th>
+                    <th>ต.ค. 68</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td class="text-left">ดัดดึงข้อต่อ (Physio)</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">รักษาด้วยคลื่นเสียง (Physio)</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">การกระตุ้นด้วยกระแสไฟฟ้า (Electrical Stimulation)</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">การแช่พาราฟิน ( Parafin Bath )</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">การดึงหลังด้วยเครื่อง ( Pelvic Traction )</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">การกดจุดและการนวด ( Acupressure  amd  Massage )</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">การดึงคอด้วยเครื่อง ( Cervical Traction )</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">Passive movement</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">สอนญาติและผู้ป่วยปฏิบัติตนที่บ้าน ( Home/Ward Program )</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr><td class="text-left">การประคบด้วยแผ่นความร้อน ( Hydrocollator )</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+                <tr class="bg-total"><td class="text-left">รวมบริการทั้งหมด</td><td>-</td><td>-</td><td>-</td><td>-</td><td></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const labels = ['ต.ค. 68', 'พ.ย. 68', 'ธ.ค. 68', 'ม.ค. 69', 'ก.พ. 69'];
+
+    function createChart(id, label, data, color) {
+        new Chart(document.getElementById(id), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    borderColor: color,
+                    backgroundColor: color + '22',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: false, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // ใส่ข้อมูลจากไฟล์ที่วิเคราะห์
+    createChart('chartOPD', 'OPD', [2982, 2409, 2818, 2583, 3238], '#3498db');
+    createChart('chartER', 'ER', [1455, 1363, 1346, 1251, 1261], '#e67e22');
+    createChart('chartIPD', 'IPD', [301, 259, 238, 205, 211], '#2ecc71');
+    createChart('chartLR', 'LR', [4, 6, 6, 2, 2], '#9b59b6');
+    createChart('chartDeath', 'Death', [0, 1, 1, 1, 1], '#c0392b');
+    createChart('chartRefer', 'Refer', [119, 111, 143, 137, 120], '#f1c40f');
+    createChart('chartDental', 'Dental', [0, 0, 0, 0, 0], '#95a5a6'); // รอเติมข้อมูล
+    createChart('chartPhysical', 'Physical', [221, 202, 196, 192, 210], '#1abc9c');
+    createChart('chartThai', 'Thai', [111, 106, 105, 113, 126], '#27ae60');
+
+// โหลด Library SheetJS อัตโนมัติ (ใส่ไว้บนสุดของ script)
+const script = document.createElement('script');
+script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+document.head.appendChild(script);
+
+document.getElementById('excel_input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        // ประมวลผลข้อมูล (อิงตามโครงสร้างไฟล์ที่คุณส่งมา)
+        // แถวที่ 14 (Index 13) คือแถว 'รวม'
+        const physicalTotal = rows[13][2]; // คอลัมน์ C
+        const thaiTotal = rows[13][3];     // คอลัมน์ D
+
+        // อัปเดตตัวเลขบน Card
+        if(physicalTotal) {
+            document.querySelector('#chartPhysical').parentElement.querySelector('.latest-value').innerHTML = 
+                `${physicalTotal} <span class="unit">คน</span>`;
+        }
+        if(thaiTotal) {
+            document.querySelector('#chartThai').parentElement.querySelector('.latest-value').innerHTML = 
+                `${thaiTotal} <span class="unit">คน</span>`;
+        }
+
+        alert('อัปเดตข้อมูลจาก Excel เรียบร้อยแล้ว!');
+    };
+    reader.readAsArrayBuffer(file);
+});
+
+
+</script>
+
+</body>
+</html>
