@@ -159,6 +159,9 @@
        <div class="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30">
         <span class="text-emerald-400 flex items-center gap-2"> <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> ข้อมูลล่าสุด: <span id="latestMonth" class="font-semibold">มีนาคม 2569</span> </span>
        </div>
+       <a href="/admin.html" title="จัดการข้อมูล (สำหรับแอดมิน)" aria-label="จัดการข้อมูลสำหรับแอดมิน" class="w-10 h-10 rounded-full bg-slate-700/70 hover:bg-slate-600 border border-slate-600 flex items-center justify-center transition-colors">
+        <i data-lucide="settings" class="w-5 h-5 text-slate-300"></i>
+       </a>
       </div>
      </div>
     </div>
@@ -625,21 +628,18 @@
 <script>
 
 // ================= CONFIG DATA =================
-const rawData = [
+let rawData = [
     { m: 'ก.พ. 69', opd:3238, er:1261, ipd:211, lr:2, death:1, refer:120, dental:496, physical:210, thai:126 },
     { m: 'มี.ค. 69', opd:2840, er:1242, ipd:209, lr:2, death:4, refer:118, dental:396, physical:266, thai:134 },
     { m: 'เม.ย. 69', opd:2624, er:1176, ipd:257, lr:2, death:3, refer:90, dental:361, physical:192, thai:113 },
     { m: 'พ.ค. 69', opd:3453, er:1078, ipd:236, lr:9, death:1, refer:122, dental:412, physical:208, thai:101 },
     { m: 'มิ.ย. 69', opd:3194, er:1424, ipd:346, lr:5, death:0, refer:127, dental:444, physical:221, thai:100 }
-
-    // 👉 เพิ่มเดือนใหม่ตรงนี้เท่านั้น
-    // { m: 'เม.ย. 69', opd:3000, er:1300, ipd:220, lr:3, death:2, refer:110, dental:410, physical:280, thai:150 }
 ];
 
 // ================= AUTO SLIDE 5 MONTH =================
-const last5 = rawData.slice(-5);
-
-const labels = last5.map(d => d.m);
+let last5 = rawData.slice(-5);
+let labels = last5.map(d => d.m);
+const chartInstances = {};
 
 function mapData(key){
     return last5.map(d => d[key]);
@@ -653,7 +653,7 @@ function getLatest(arr){
 function getPercent(arr){
     const last = arr[arr.length-1];
     const prev = arr[arr.length-2];
-    if(prev === 0) return 0;
+    if(prev === undefined || prev === 0) return 0;
     return ((last-prev)/prev*100).toFixed(1);
 }
 
@@ -679,8 +679,9 @@ function createChart(id,data,color){
     if(!el) return;
 
     const ctx = el.getContext('2d');
+    if(chartInstances[id]) chartInstances[id].destroy();
 
-    new Chart(ctx,{
+    chartInstances[id] = new Chart(ctx,{
         type:'line',
         data:{
             labels,
@@ -703,6 +704,9 @@ function createChart(id,data,color){
 
 // ================= INIT =================
 function init(){
+    last5 = rawData.slice(-5);
+    labels = last5.map(d => d.m);
+    if(!last5.length) return;
 
     const map = [
         ['opd','valueOPD','trendOPD','chartOPD','rgba(59,130,246,1)'],
@@ -737,7 +741,32 @@ function init(){
     lucide.createIcons();
 }
 
-document.addEventListener('DOMContentLoaded', init);
+async function syncDashboard(){
+    try {
+        const response = await fetch(`/api/dashboard?t=${Date.now()}`, { cache: 'no-store' });
+        if(!response.ok) throw new Error('API unavailable');
+        const result = await response.json();
+        if(Array.isArray(result.data) && result.data.length) {
+            const changed = JSON.stringify(result.data) !== JSON.stringify(rawData);
+            rawData = result.data;
+            if(changed) init();
+        }
+    } catch(error) {
+        console.warn('ใช้ข้อมูลสำรองในหน้าเว็บ:', error.message);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    init();
+    await syncDashboard();
+    setInterval(syncDashboard, 10000);
+    if('BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('hospital-dashboard');
+        channel.addEventListener('message', event => {
+            if(event.data === 'updated') syncDashboard();
+        });
+    }
+});
 
 </script>
 </html>

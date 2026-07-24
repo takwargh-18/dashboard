@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>จัดการข้อมูลรายเดือน | Hospital Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{font-family:"Noto Sans Thai",sans-serif;color:#e5e7eb;background:#071124}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 10% 0,#18396b 0,transparent 33%),radial-gradient(circle at 90% 100%,#31205c 0,transparent 35%),#071124}.shell{max-width:1180px;margin:auto;padding:32px 20px 64px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}.title{display:flex;align-items:center;gap:14px}.logo{width:50px;height:50px;border-radius:15px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:grid;place-items:center;font-size:24px}.title h1{font-size:24px;margin:0}.title p{margin:3px 0 0;color:#94a3b8;font-size:13px}.card{background:rgba(15,23,42,.86);border:1px solid rgba(148,163,184,.2);box-shadow:0 24px 60px rgba(0,0,0,.28);border-radius:22px;padding:24px;backdrop-filter:blur(18px)}button,a.button{font:inherit;border:0;border-radius:11px;padding:10px 16px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}.primary{color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 8px 24px rgba(59,130,246,.25)}.ghost{color:#cbd5e1;background:#1e293b}.danger{color:#fecaca;background:#7f1d1d}.login{max-width:420px;margin:12vh auto}.login h2{margin:0 0 6px}.login p{color:#94a3b8;margin:0 0 20px}.field{display:flex;flex-direction:column;gap:7px}.field label{font-size:13px;color:#cbd5e1}.field input{width:100%;border:1px solid #334155;background:#0f172a;color:#fff;border-radius:11px;padding:12px 14px;font:inherit;outline:none}.field input:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(59,130,246,.16)}.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}.notice{padding:12px 14px;border-radius:11px;margin-bottom:18px;font-size:14px}.info{background:#172554;color:#bfdbfe}.error{background:#450a0a;color:#fecaca}.success{background:#052e24;color:#a7f3d0}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.status{color:#94a3b8;font-size:13px}.table-wrap{overflow:auto;border:1px solid #273449;border-radius:15px}table{width:100%;border-collapse:collapse;min-width:1050px}th{position:sticky;top:0;background:#172033;color:#94a3b8;font-size:12px;padding:12px 8px;text-align:center}td{border-top:1px solid #253147;padding:8px}td input{width:88px;text-align:right;border:1px solid #334155;background:#111c30;color:#fff;border-radius:8px;padding:9px;font:inherit}td:first-child input{width:110px;text-align:left}.row-actions{white-space:nowrap}.empty{padding:40px;text-align:center;color:#94a3b8}.hidden{display:none!important}@media(max-width:640px){.top,.toolbar{align-items:stretch;flex-direction:column}.top>a{width:100%}.card{padding:16px}.actions{flex-wrap:wrap}.actions button{flex:1}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section id="loginView" class="card login">
+      <div class="title"><div class="logo">🔐</div><div><h2>เข้าสู่ระบบแอดมิน</h2><p>เฉพาะผู้ดูแลระบบเท่านั้น</p></div></div>
+      <div id="loginMessage"></div>
+      <form id="loginForm"><div class="field"><label for="password">รหัสผ่านแอดมิน</label><input id="password" type="password" autocomplete="current-password" required autofocus></div><button class="primary" style="width:100%;margin-top:18px" type="submit">เข้าสู่ระบบ</button></form>
+    </section>
+    <section id="editorView" class="hidden">
+      <header class="top"><div class="title"><div class="logo">✎</div><div><h1>จัดการข้อมูลรายเดือน</h1><p>Hospital Performance Dashboard</p></div></div><a class="button ghost" href="/">← กลับหน้า Dashboard</a></header>
+      <div class="card">
+        <div id="message"></div>
+        <div class="toolbar"><div><strong>ข้อมูลตัวชี้วัด</strong><div id="status" class="status">กำลังโหลดข้อมูล…</div></div><button id="addRow" class="ghost">＋ เพิ่มเดือน</button></div>
+        <div class="table-wrap"><table><thead><tr><th>เดือน</th><th>OPD</th><th>ER</th><th>IPD</th><th>LR</th><th>Death</th><th>Refer Out</th><th>ทันตกรรม</th><th>กายภาพ</th><th>แพทย์แผนไทย</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+        <div class="actions"><button id="logout" class="ghost">ออกจากระบบ</button><button id="reload" class="ghost">โหลดใหม่</button><button id="save" class="primary">บันทึกและซิงก์ทันที</button></div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const keys=["opd","er","ipd","lr","death","refer","dental","physical","thai"];
+    let token=sessionStorage.getItem("dashboard_admin_token")||"", data=[];
+    const $=id=>document.getElementById(id);
+    function showMessage(id,text,type="error"){ $(id).innerHTML=text?`<div class="notice ${type}">${text}</div>`:""; }
+    function openEditor(){ $("loginView").classList.add("hidden");$("editorView").classList.remove("hidden");loadData(); }
+    function render(){
+      $("rows").innerHTML=data.map((row,i)=>`<tr><td><input data-i="${i}" data-key="m" value="${escapeHtml(row.m)}" aria-label="เดือน"></td>${keys.map(k=>`<td><input type="number" min="0" step="1" data-i="${i}" data-key="${k}" value="${row[k]}" aria-label="${k}"></td>`).join("")}<td class="row-actions"><button class="danger" data-delete="${i}" aria-label="ลบเดือน">ลบ</button></td></tr>`).join("");
+      $("status").textContent=`ทั้งหมด ${data.length} เดือน • แก้ไขแล้วกดบันทึกเพื่อเผยแพร่`;
+    }
+    function escapeHtml(value){const el=document.createElement("div");el.textContent=value;return el.innerHTML.replace(/"/g,"&quot;");}
+    async function loadData(){
+      showMessage("message","");
+      try{const r=await fetch("/api/dashboard",{cache:"no-store"});const j=await r.json();if(!r.ok)throw Error(j.error);data=j.data;render();}
+      catch(e){showMessage("message",e.message);}
+    }
+    $("loginForm").addEventListener("submit",async e=>{
+      e.preventDefault();showMessage("loginMessage","");
+      try{const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("password").value})});const j=await r.json();if(!r.ok)throw Error(j.error);token=j.token;sessionStorage.setItem("dashboard_admin_token",token);openEditor();}
+      catch(e){showMessage("loginMessage",e.message);}
+    });
+    $("rows").addEventListener("input",e=>{const i=Number(e.target.dataset.i),key=e.target.dataset.key;if(key)data[i][key]=key==="m"?e.target.value:Number(e.target.value);});
+    $("rows").addEventListener("click",e=>{if(e.target.dataset.delete!==undefined){data.splice(Number(e.target.dataset.delete),1);render();}});
+    $("addRow").onclick=()=>{data.push({m:"",...Object.fromEntries(keys.map(k=>[k,0]))});render();setTimeout(()=>$("rows").querySelector("tr:last-child input").focus(),0);};
+    $("reload").onclick=loadData;
+    $("logout").onclick=()=>{sessionStorage.removeItem("dashboard_admin_token");location.reload();};
+    $("save").onclick=async()=>{
+      showMessage("message","");$("save").disabled=true;$("save").textContent="กำลังบันทึก…";
+      try{const r=await fetch("/api/dashboard",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({data})});const j=await r.json();if(!r.ok)throw Error(j.error);data=j.data;render();if("BroadcastChannel" in window){const channel=new BroadcastChannel("hospital-dashboard");channel.postMessage("updated");channel.close();}showMessage("message","บันทึกสำเร็จ ข้อมูลหน้า Dashboard ซิงก์แล้ว","success");}
+      catch(e){showMessage("message",e.message);if(e.message.includes("เซสชัน")){sessionStorage.removeItem("dashboard_admin_token");}}
+      finally{$("save").disabled=false;$("save").textContent="บันทึกและซิงก์ทันที";}
+    };
+    if(token)openEditor();
+  </script>
+</body>
+</html>
