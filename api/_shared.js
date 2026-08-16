@@ -1,5 +1,8 @@
 const crypto = require("crypto");
 
+const STORAGE_KEY = "hospital:dashboard:admin-data";
+const LEGACY_DASHBOARD_KEY = "hospital:dashboard:data";
+
 const DEFAULT_DATA = [
   { m: "ก.พ. 69", opd: 3238, er: 1261, ipd: 211, lr: 2, death: 1, refer: 120, dental: 496, physical: 210, thai: 126 },
   { m: "มี.ค. 69", opd: 2840, er: 1242, ipd: 209, lr: 2, death: 4, refer: 118, dental: 396, physical: 266, thai: 134 },
@@ -9,6 +12,165 @@ const DEFAULT_DATA = [
 ];
 
 const METRICS = ["opd", "er", "ipd", "lr", "death", "refer", "dental", "physical", "thai"];
+
+const SERVICE_SECTIONS = [
+  {
+    id: "physical",
+    title: "จำนวนบริการกายภาพบำบัด",
+    shortTitle: "กายภาพบำบัด",
+    columns: [
+      { key: "jointMobilization", label: "การดัดดึงข้อต่อ" },
+      { key: "ultrasoundTherapy", label: "การรักษาด้วยคลื่นเสียง" },
+      { key: "electricalStimulation", label: "การกระตุ้นด้วยกระแสไฟฟ้า" },
+      { key: "paraffinBath", label: "การแช่พาราฟิน" },
+      { key: "pelvicTraction", label: "การดึงหลังด้วยเครื่อง(Pelvic Traction)" },
+      { key: "acupressureMassage", label: "การกดจุดและการนวด(Acupressure& Massage)" },
+      { key: "cervicalTraction", label: "การดึงคอด้วยเครื่อง(Cervical Traction)" },
+      { key: "passiveMovement", label: "Passive Movement" },
+      { key: "homeProgramEducation", label: "สอนญาติและผู้ป่วยปฏิบัติตนที่บ้าน" },
+      { key: "heatCompress", label: "การประคบด้วยแผ่นความร้อน" }
+    ]
+  },
+  {
+    id: "thai",
+    title: "จำนวนบริการแพทย์แผนไทย",
+    shortTitle: "แพทย์แผนไทย",
+    columns: [
+      { key: "herbalMedicine", label: "จ่ายยาสมุนไพร" },
+      { key: "herbalMassageCompress", label: "นวดและประคบสมุนไพร" },
+      { key: "herbalSteam", label: "อบไอน้ำสมุนไพร" },
+      { key: "kneePoultice", label: "พอกเข่า" },
+      { key: "postpartumProcedureKit", label: "ชุดหัตถการสำหรับแม่หลังคลอด" }
+    ]
+  }
+];
+
+const SERVICE_KEYS = Object.fromEntries(
+  SERVICE_SECTIONS.map(section => [section.id, section.columns.map(column => column.key)])
+);
+
+const DEFAULT_SERVICES = {
+  physical: [
+    {
+      m: "ก.พ. 69",
+      jointMobilization: 203,
+      ultrasoundTherapy: 207,
+      electricalStimulation: 68,
+      paraffinBath: 14,
+      pelvicTraction: 201,
+      acupressureMassage: 203,
+      cervicalTraction: 21,
+      passiveMovement: 81,
+      homeProgramEducation: 210,
+      heatCompress: 195
+    },
+    {
+      m: "มี.ค. 69",
+      jointMobilization: 252,
+      ultrasoundTherapy: 254,
+      electricalStimulation: 68,
+      paraffinBath: 16,
+      pelvicTraction: 252,
+      acupressureMassage: 257,
+      cervicalTraction: 20,
+      passiveMovement: 100,
+      homeProgramEducation: 261,
+      heatCompress: 248
+    },
+    {
+      m: "เม.ย. 69",
+      jointMobilization: 177,
+      ultrasoundTherapy: 168,
+      electricalStimulation: 32,
+      paraffinBath: 10,
+      pelvicTraction: 150,
+      acupressureMassage: 162,
+      cervicalTraction: 9,
+      passiveMovement: 75,
+      homeProgramEducation: 164,
+      heatCompress: 146
+    },
+    {
+      m: "พ.ค. 69",
+      jointMobilization: 103,
+      ultrasoundTherapy: 46,
+      electricalStimulation: 197,
+      paraffinBath: 6,
+      pelvicTraction: 57,
+      acupressureMassage: 137,
+      cervicalTraction: 18,
+      passiveMovement: 190,
+      homeProgramEducation: 146,
+      heatCompress: 193
+    },
+    {
+      m: "มิ.ย. 69",
+      jointMobilization: 118,
+      ultrasoundTherapy: 49,
+      electricalStimulation: 217,
+      paraffinBath: 7,
+      pelvicTraction: 56,
+      acupressureMassage: 151,
+      cervicalTraction: 23,
+      passiveMovement: 98,
+      homeProgramEducation: 192,
+      heatCompress: 192
+    }
+  ],
+  thai: [
+    {
+      m: "ก.พ. 69",
+      herbalMedicine: 94,
+      herbalMassageCompress: 122,
+      herbalSteam: 57,
+      kneePoultice: 1,
+      postpartumProcedureKit: 7
+    },
+    {
+      m: "มี.ค. 69",
+      herbalMedicine: 118,
+      herbalMassageCompress: 138,
+      herbalSteam: 85,
+      kneePoultice: 1,
+      postpartumProcedureKit: 5
+    },
+    {
+      m: "เม.ย. 69",
+      herbalMedicine: 76,
+      herbalMassageCompress: 111,
+      herbalSteam: 52,
+      kneePoultice: 2,
+      postpartumProcedureKit: 0
+    },
+    {
+      m: "พ.ค. 69",
+      herbalMedicine: 82,
+      herbalMassageCompress: 94,
+      herbalSteam: 65,
+      kneePoultice: 2,
+      postpartumProcedureKit: 10
+    },
+    {
+      m: "มิ.ย. 69",
+      herbalMedicine: 76,
+      herbalMassageCompress: 94,
+      herbalSteam: 61,
+      kneePoultice: 0,
+      postpartumProcedureKit: 6
+    }
+  ]
+};
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function defaultStore() {
+  return {
+    dashboard: clone(DEFAULT_DATA),
+    services: clone(DEFAULT_SERVICES)
+  };
+}
 
 function env(nameA, nameB) {
   return process.env[nameA] || process.env[nameB];
@@ -33,18 +195,89 @@ async function redis(command) {
   return (await response.json()).result;
 }
 
-async function readData() {
+function validateRows(input, keys, options = {}) {
+  const { minRows = 1, maxRows = 60 } = options;
+  if (!Array.isArray(input) || input.length < minRows || input.length > maxRows) return null;
+  const months = new Set();
+  const clean = [];
+  for (const row of input) {
+    const m = String(row.m || "").trim().slice(0, 30);
+    if (!m || months.has(m)) return null;
+    months.add(m);
+    const next = { m };
+    for (const key of keys) {
+      const value = Number(row[key]);
+      if (!Number.isInteger(value) || value < 0 || value > 10000000) return null;
+      next[key] = value;
+    }
+    clean.push(next);
+  }
+  return clean;
+}
+
+function validateData(input) {
+  return validateRows(input, METRICS);
+}
+
+function validateServices(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+  const clean = {};
+  for (const section of SERVICE_SECTIONS) {
+    const rows = validateRows(input[section.id], SERVICE_KEYS[section.id]);
+    if (!rows) return null;
+    clean[section.id] = rows;
+  }
+  return clean;
+}
+
+function normalizeStore(store = {}) {
+  const fallback = defaultStore();
+  const dashboard = validateData(store.dashboard) || fallback.dashboard;
+  const services = validateServices(store.services) || fallback.services;
+  return { dashboard, services };
+}
+
+async function readStore() {
   try {
-    const stored = await redis(["GET", "hospital:dashboard:data"]);
-    return stored ? JSON.parse(stored) : DEFAULT_DATA;
+    const stored = await redis(["GET", STORAGE_KEY]);
+    if (stored) return normalizeStore(JSON.parse(stored));
+
+    const fallback = defaultStore();
+    const legacyDashboard = await redis(["GET", LEGACY_DASHBOARD_KEY]);
+    if (!legacyDashboard) return fallback;
+
+    const parsedLegacy = validateData(JSON.parse(legacyDashboard));
+    if (parsedLegacy) fallback.dashboard = parsedLegacy;
+    return fallback;
   } catch (error) {
-    if (error.message === "STORAGE_NOT_CONFIGURED") return DEFAULT_DATA;
+    if (error.message === "STORAGE_NOT_CONFIGURED") return defaultStore();
     throw error;
   }
 }
 
+async function writeStore(store) {
+  const clean = normalizeStore(store);
+  await redis(["SET", STORAGE_KEY, JSON.stringify(clean)]);
+}
+
+async function readData() {
+  return (await readStore()).dashboard;
+}
+
 async function writeData(data) {
-  await redis(["SET", "hospital:dashboard:data", JSON.stringify(data)]);
+  const store = await readStore();
+  store.dashboard = data;
+  await writeStore(store);
+}
+
+async function readServices() {
+  return (await readStore()).services;
+}
+
+async function writeServices(services) {
+  const store = await readStore();
+  store.services = services;
+  await writeStore(store);
 }
 
 function secret() {
@@ -70,23 +303,17 @@ function verifyToken(token = "") {
   }
 }
 
-function validateData(input) {
-  if (!Array.isArray(input) || input.length < 1 || input.length > 60) return null;
-  const months = new Set();
-  const clean = [];
-  for (const row of input) {
-    const m = String(row.m || "").trim().slice(0, 30);
-    if (!m || months.has(m)) return null;
-    months.add(m);
-    const next = { m };
-    for (const key of METRICS) {
-      const value = Number(row[key]);
-      if (!Number.isInteger(value) || value < 0 || value > 10000000) return null;
-      next[key] = value;
-    }
-    clean.push(next);
-  }
-  return clean;
-}
-
-module.exports = { DEFAULT_DATA, METRICS, createToken, readData, validateData, verifyToken, writeData };
+module.exports = {
+  DEFAULT_DATA,
+  DEFAULT_SERVICES,
+  METRICS,
+  SERVICE_SECTIONS,
+  createToken,
+  readData,
+  readServices,
+  validateData,
+  validateServices,
+  verifyToken,
+  writeData,
+  writeServices
+};
