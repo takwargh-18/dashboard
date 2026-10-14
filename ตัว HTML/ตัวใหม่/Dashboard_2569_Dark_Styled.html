@@ -1,0 +1,1400 @@
+<!doctype html>
+
+<html lang="th">
+
+  <head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <title>
+
+      สรุปผลการดำเนินงาน ปีงบประมาณ 2569 | โรงพยาบาลพยาบาลสถานพระบารมี
+
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+
+      href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap"
+
+      rel="stylesheet"
+
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+
+      :root {
+
+        --bg: #f3f6fb;
+
+        --surface: #fff;
+
+        --ink: #172c43;
+
+        --muted: #6c7e93;
+
+        --border: #e4ebf3;
+
+        --blue: #2563eb;
+
+        --shadow: 0 7px 28px rgba(21, 48, 89, 0.045);
+
+      }
+
+      * {
+
+        box-sizing: border-box;
+
+      }
+
+      body {
+
+        font-family: Sarabun, system-ui, sans-serif;
+
+        margin: 0;
+
+        background: var(--bg);
+
+        color: var(--ink);
+
+      }
+
+      button,
+
+      input {
+
+        font: inherit;
+
+      }
+
+      .shell {
+
+        max-width: 1420px;
+
+        margin: 0 auto;
+
+        padding: 30px 26px 60px;
+
+      }
+
+      .top {
+
+        display: flex;
+
+        gap: 18px;
+
+        align-items: flex-start;
+
+        justify-content: space-between;
+
+        margin-bottom: 26px;
+
+      }
+
+      .eyebrow {
+
+        font-size: 12px;
+
+        font-weight: 800;
+
+        letter-spacing: 0.1em;
+
+        text-transform: uppercase;
+
+        color: #4772af;
+
+        margin: 0 0 6px;
+
+      }
+
+      .top h1 {
+
+        font-size: clamp(24px, 3vw, 34px);
+
+        line-height: 1.35;
+
+        margin: 0;
+
+        font-weight: 800;
+
+      }
+
+      .subtitle {
+
+        margin: 8px 0 0;
+
+        color: var(--muted);
+
+        font-size: 15px;
+
+      }
+
+      .fiscal-pill {
+
+        white-space: nowrap;
+
+        background: #e6efff;
+
+        color: #2354a7;
+
+        border: 1px solid #d0e1ff;
+
+        padding: 10px 16px;
+
+        border-radius: 100px;
+
+        font-weight: 700;
+
+      }
+
+      .summary {
+
+        display: grid;
+
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+
+        gap: 15px;
+
+        margin-bottom: 24px;
+
+      }
+
+      .summary .mini {
+
+        background: var(--surface);
+
+        border-radius: 15px;
+
+        border: 1px solid var(--border);
+
+        padding: 18px 20px;
+
+        box-shadow: var(--shadow);
+
+      }
+
+      .mini .mini-label {
+
+        font-size: 13px;
+
+        color: var(--muted);
+
+        font-weight: 600;
+
+      }
+
+      .mini .mini-value {
+
+        font-size: 29px;
+
+        font-weight: 800;
+
+        letter-spacing: -0.035em;
+
+        margin-top: 4px;
+
+        line-height: 1.3;
+
+      }
+
+      .mini .mini-foot {
+
+        font-size: 12px;
+
+        color: #91a0b2;
+
+        margin-top: 5px;
+
+      }
+
+      .mini .mini-value span {
+
+        font-size: 13px;
+
+        color: var(--muted);
+
+        font-weight: 500;
+
+        letter-spacing: 0;
+
+      }
+
+      .heading {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: end;
+
+        gap: 12px;
+
+        margin: 5px 0 15px;
+
+      }
+
+      .heading h2 {
+
+        margin: 0;
+
+        font-size: 20px;
+
+      }
+
+      .heading p {
+
+        color: var(--muted);
+
+        font-size: 13px;
+
+        margin: 5px 0 0;
+
+      }
+
+      .monthbar {
+
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: 8px;
+
+      }
+
+      .monthbtn {
+
+        border: 1px solid #d9e3ee;
+
+        background: #fff;
+
+        border-radius: 9px;
+
+        padding: 7px 12px;
+
+        color: #59708a;
+
+        font-size: 13px;
+
+        cursor: pointer;
+
+      }
+
+      .monthbtn:hover {
+
+        background: #f2f6ff;
+
+      }
+
+      .monthbtn.active {
+
+        background: #285dd9;
+
+        border-color: #285dd9;
+
+        color: white;
+
+      }
+
+      .grid {
+
+        display: grid;
+
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+        gap: 16px;
+
+      }
+
+      .card {
+
+        background: var(--surface);
+
+        border: 1px solid var(--border);
+
+        border-radius: 16px;
+
+        padding: 19px 20px 14px;
+
+        box-shadow: var(--shadow);
+
+        min-width: 0;
+
+      }
+
+      .card-head {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: flex-start;
+
+        gap: 10px;
+
+      }
+
+      .card-name {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        font-size: 16px;
+
+        font-weight: 800;
+
+      }
+
+      .marker {
+
+        width: 9px;
+
+        height: 9px;
+
+        border-radius: 3px;
+
+        background: var(--accent);
+
+        flex-shrink: 0;
+
+      }
+
+      .trend-unit {
+
+        color: var(--muted);
+
+        font-size: 11px;
+
+        border: 1px solid var(--border);
+
+        padding: 4px 7px;
+
+        border-radius: 7px;
+
+        white-space: nowrap;
+
+      }
+
+      .amount {
+
+        font-size: 30px;
+
+        font-weight: 800;
+
+        letter-spacing: -0.03em;
+
+        margin-top: 12px;
+
+      }
+
+      .amount small {
+
+        font-size: 14px;
+
+        font-weight: 500;
+
+        color: var(--muted);
+
+        letter-spacing: 0;
+
+        margin-left: 3px;
+
+      }
+
+      .card-note {
+
+        font-size: 12px;
+
+        color: var(--muted);
+
+        margin-top: 0;
+
+      }
+
+      .chart-wrap {
+
+        height: 155px;
+
+        position: relative;
+
+        margin-top: 8px;
+
+      }
+
+      .chart-wrap canvas {
+
+        width: 100% !important;
+
+        height: 100% !important;
+
+      }
+
+      .month-reading {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        gap: 8px;
+
+        border-top: 1px solid #edf1f7;
+
+        margin-top: 12px;
+
+        padding-top: 10px;
+
+        color: #6f8097;
+
+        font-size: 12px;
+
+      }
+
+      .month-reading strong {
+
+        color: #254968;
+
+        font-size: 13px;
+
+      }
+
+      .info {
+
+        display: flex;
+
+        align-items: start;
+
+        gap: 9px;
+
+        background: #eaf2ff;
+
+        border: 1px solid #d7e7ff;
+
+        border-radius: 12px;
+
+        color: #32577e;
+
+        padding: 12px 16px;
+
+        margin: 0 0 24px;
+
+        font-size: 13px;
+
+      }
+
+      .info b {
+
+        font-weight: 800;
+
+      }
+
+      .bottom {
+
+        margin-top: 26px;
+
+        background: white;
+
+        border: 1px solid var(--border);
+
+        border-radius: 15px;
+
+        padding: 18px 20px;
+
+      }
+
+      .bottom h3 {
+
+        margin: 0 0 5px;
+
+        font-size: 16px;
+
+      }
+
+      .bottom p {
+
+        margin: 0;
+
+        color: var(--muted);
+
+        font-size: 13px;
+
+      }
+
+      .upload-row {
+
+        display: flex;
+
+        gap: 12px;
+
+        align-items: center;
+
+        flex-wrap: wrap;
+
+        margin-top: 14px;
+
+      }
+
+      .upload-row input {
+
+        max-width: 100%;
+
+        font-size: 13px;
+
+      }
+
+      .notice {
+
+        font-size: 12px;
+
+        color: #668096;
+
+        margin-top: 10px;
+
+      }
+
+      .status {
+
+        font-size: 13px;
+
+        color: #24624f;
+
+        margin-top: 8px;
+
+        min-height: 20px;
+
+      }
+
+      .legend {
+
+        font-size: 12px;
+
+        color: #7d8b9d;
+
+        text-align: right;
+
+        margin-top: 12px;
+
+      }
+
+      @media (max-width: 1060px) {
+
+        .grid {
+
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        }
+
+        .summary {
+
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        }
+
+      }
+
+      @media (max-width: 650px) {
+
+        .shell {
+
+          padding: 18px 13px 40px;
+
+        }
+
+        .top {
+
+          display: block;
+
+        }
+
+        .fiscal-pill {
+
+          display: inline-block;
+
+          margin-top: 14px;
+
+        }
+
+        .grid {
+
+          grid-template-columns: 1fr;
+
+        }
+
+        .summary {
+
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
+          gap: 9px;
+
+        }
+
+        .summary .mini {
+
+          padding: 13px;
+
+        }
+
+        .mini .mini-value {
+
+          font-size: 24px;
+
+        }
+
+        .heading {
+
+          align-items: flex-start;
+
+          flex-direction: column;
+
+        }
+
+        .card {
+
+          padding: 17px;
+
+        }
+
+      }
+
+
+      /* ===== THEME 2026: visual styling from the previous dashboard ===== */
+      :root { --bg:#0f172a; --surface:#f7f9fd; --ink:#18283e; --muted:#718198; --border:#dce4f1; --shadow:0 12px 36px rgba(0,0,0,.17); }
+      body { background:radial-gradient(ellipse 500px 480px at 8% 11%,rgba(37,99,235,.23),transparent 77%),radial-gradient(ellipse 450px 440px at 90% 79%,rgba(147,51,234,.18),transparent 78%),#0f172a; background-attachment:fixed; }
+      .shell { max-width:1370px; position:relative; }
+      .top { background:rgba(83,91,110,.84); border:1px solid rgba(255,255,255,.16); border-radius:22px; padding:23px 28px; align-items:center; box-shadow:0 15px 40px rgba(0,0,0,.14); }
+      .top h1 { background:linear-gradient(95deg,#86b7ff,#c995f7,#f4a6dd); background-clip:text; -webkit-background-clip:text; color:transparent; }
+      .eyebrow { color:#a9c9ff; }.subtitle {color:#c9d4e6}
+      .fiscal-pill {background:rgba(16,185,129,.14);color:#7ce6b3;border-color:rgba(16,185,129,.3)}
+      .summary .mini {background:rgba(250,252,255,.96);border-color:rgba(255,255,255,.55); border-radius:17px; transition:transform .2s,box-shadow .2s; border-top:3px solid var(--accent,#93a4b9)}
+      .summary .mini:hover {transform:translateY(-3px);box-shadow:0 14px 32px rgba(0,0,0,.16)}
+      .heading h2 {color:#f2f6ff}.heading p {color:#aab9d1}.legend {color:#aebbd2}
+      .card {background:rgba(250,252,255,.94);border:1px solid rgba(255,255,255,.7); border-radius:20px; padding:20px 22px 15px;box-shadow:0 12px 35px rgba(0,0,0,.14);transition:transform .2s,box-shadow .2s}
+      .card:hover {transform:translateY(-3px);box-shadow:0 18px 36px rgba(0,0,0,.19)}
+      .card-name {gap:11px;}.marker {display:none}
+      .service-icon {width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;color:white;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:13px;box-shadow:0 6px 12px color-mix(in srgb,var(--accent) 24%,transparent)}
+      .service-icon svg {width:23px;height:23px;stroke:currentColor;stroke-width:1.9;fill:none;stroke-linecap:round;stroke-linejoin:round}
+      .amount {color:var(--accent);font-size:34px}.trend-unit {background:#eff4fa;color:#5d7089}
+      .month-reading strong {color:var(--accent)}
+      .monthbtn {background:#e9eef7;border-color:#dce5f5;color:#405676;font-weight:700}
+      .monthbtn.active {background:#3467ed;color:white;border-color:#3467ed;box-shadow:0 3px 11px rgba(52,103,237,.29)}
+      .info {background:rgba(46,89,158,.19);color:#cbdefc;border-color:rgba(109,164,248,.22)}
+      .bottom {background:rgba(250,252,255,.96)}
+      @media(max-width:650px){.top{padding:20px}.card{padding:17px}.fiscal-pill{margin-top:12px}}
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <main class="shell">
+
+      <header class="top">
+
+        <div>
+
+          <p class="eyebrow">Hospital Performance Dashboard</p>
+
+          <h1>สรุปผลการดำเนินงานโรงพยาบาล</h1>
+
+          <p class="subtitle">
+
+            โรงพยาบาลพยาบาลสถานพระบารมี · ภาพรวมสถิติบริการ
+
+          </p>
+
+        </div>
+
+        <div class="fiscal-pill">ปีงบประมาณ 2569</div>
+
+      </header>
+
+      <section class="summary" aria-label="ตัวชี้วัดหลัก">
+
+        <div class="mini">
+
+          <div class="mini-label">ผู้ป่วยนอก (OPD)</div>
+
+          <div class="mini-value">37,856 <span>ครั้ง</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">ห้องฉุกเฉิน (ER)</div>
+
+          <div class="mini-value">15,990 <span>ครั้ง</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">ผู้ป่วยใน (IPD)</div>
+
+          <div class="mini-value">3,241 <span>ครั้ง</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">ส่งต่อ (Refer Out)</div>
+
+          <div class="mini-value">1,417 <span>ราย</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">กายภาพบำบัด</div>
+
+          <div class="mini-value">2,956 <span>คน</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">แพทย์แผนไทยฯ</div>
+
+          <div class="mini-value">1,391 <span>คน</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>  
+
+        <div class="mini">
+
+          <div class="mini-label">คลอด (LR)</div>
+
+          <div class="mini-value">44 <span>ราย</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">เสียชีวิต (Death)</div>
+
+          <div class="mini-value">22 <span>ราย</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">ทันตกรรม</div>
+
+          <div class="mini-value">3,342 <span>ครั้ง</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+      </section>
+
+      <div class="info">
+
+        <span>ⓘ</span>
+
+        <div>
+
+          <b>ขอบเขตข้อมูล:</b> ยอดรวมปีงบประมาณแสดงตามไฟล์เดิม
+
+          แต่กราฟรายเดือนมีข้อมูลเฉพาะ <b>พ.ค.–ก.ย. 2569</b> (5 เดือน)
+
+          ไม่ใช่ข้อมูลครบปี
+
+        </div>
+
+      </div>
+
+      <div class="heading">
+
+        <div>
+
+          <h2>แนวโน้มรายเดือน แยกตามบริการ</h2>
+
+          <p>
+
+            ชี้เมาส์หรือแตะจุดกราฟเพื่อดูตัวเลข ·
+
+            เลือกเดือนด้านขวาเพื่อเปรียบเทียบทุกหมวด
+
+          </p>
+
+        </div>
+
+        <div
+
+          class="monthbar"
+
+          id="monthBar"
+
+          role="group"
+
+          aria-label="เลือกเดือน"
+
+        >
+
+          <button class="monthbtn active" type="button" data-month="4">
+
+            ก.ย. 69</button
+
+          ><button class="monthbtn" type="button" data-month="3">ส.ค. 69</button
+
+          ><button class="monthbtn" type="button" data-month="2">
+
+            ก.ค. 69</button
+
+          ><button class="monthbtn" type="button" data-month="1">มิ.ย. 69</button
+
+          ><button class="monthbtn" type="button" data-month="0">
+
+            พ.ค. 69
+
+          </button>
+
+        </div>
+
+      </div>
+
+      <section
+
+        class="grid"
+
+        id="dashboardGrid"
+
+        aria-label="กราฟสถิติบริการ"
+
+      ></section>
+
+      <div class="legend">
+
+        หมายเหตุ: ยอดรวมรายปีในแต่ละการ์ดไม่ได้คำนวณจากกราฟ 5 เดือน
+
+      </div>
+
+    </main>
+
+    <script>
+
+      "use strict";
+
+      const months = ["พ.ค. 69", "มิ.ย. 69", "ก.ค. 69", "ส.ค. 69", "ก.ย. 69"];
+
+      // Data and annual totals preserved from source Dashboard(20261014-044940).html.
+
+      const services = [
+
+        {
+
+          id: "OPD",
+
+          name: "OPD (ผู้ป่วยนอก)",
+
+          total: 3887,
+
+          unit: "ครั้ง",
+
+          color: "#2563eb",
+
+          data: [3453, 3194, 3146, 3672, 3887],
+
+        },
+
+        {
+
+          id: "ER",
+
+          name: "ER (ฉุกเฉิน)",
+
+          total: 1437,
+
+          unit: "ครั้ง",
+
+          color: "#e3873b",
+
+          data: [1078, 1424, 1435, 1522, 1437],
+
+        },
+
+        {
+
+          id: "IPD",
+
+          name: "IPD (ผู้ป่วยใน)",
+
+          total: 319,
+
+          unit: "ครั้ง",
+
+          color: "#16a085",
+
+          data: [236, 346, 305, 316, 319],
+
+        },
+
+        {
+
+          id: "LR",
+
+          name: "LR (คลอด)",
+
+          total: 3,
+
+          unit: "ราย",
+
+          color: "#9564d3",
+
+          data: [9, 5, 1, 1, 3],
+
+        },
+
+        {
+
+          id: "Death",
+
+          name: "Death (เสียชีวิต)",
+
+          total: 1,
+
+          unit: "ราย",
+
+          color: "#d45261",
+
+          data: [1, 0, 2, 2, 1],
+
+        },
+
+        {
+
+          id: "Refer",
+
+          name: "Refer Out (ส่งต่อ)",
+
+          total: 83,
+
+          unit: "ราย",
+
+          color: "#d2a42c",
+
+          data: [122, 127, 135, 111, 83],
+
+        },
+
+        {
+
+          id: "Dental",
+
+          name: "ทันตกรรม",
+
+          total: 1001,
+
+          unit: "ครั้ง",
+
+          color: "#94a3b8",
+
+          data: [412,444,348,691,1001],
+
+        },
+
+        {
+
+          id: "Physical",
+
+          name: "กายภาพบำบัด",
+
+          total: 334,
+
+          unit: "คน",
+
+          color: "#1598a5",
+
+          data: [208, 221, 217, 1773, 334],
+
+        },
+
+        {
+
+          id: "Thai",
+
+          name: "แพทย์แผนไทยฯ",
+
+          total: 96,
+
+          unit: "คน",
+
+          color: "#42935a",
+
+          data: [101, 100, 110, 286, 96],
+
+        },
+
+      ];
+
+      const formatter = new Intl.NumberFormat("th-TH", {
+
+        maximumFractionDigits: 0,
+
+      });
+
+      const grid = document.getElementById("dashboardGrid");
+      const miniColors = ["#2563eb","#e3873b","#16a085","#d2a42c","#1598a5","#42935a","#9564d3","#d45261","#159bd1"];
+      document.querySelectorAll(".summary .mini").forEach((el,i)=>el.style.setProperty("--accent",miniColors[i]));
+
+      const charts = {};
+
+      let selectedMonth = 4;
+
+      const serviceIcons = {"OPD": "<circle cx=\"10\" cy=\"7\" r=\"4\"/><path d=\"M3 21v-2a7 7 0 0 1 11-5.7M16 18l2 2 4-5\"/>", "ER": "<path d=\"M5 21h14M7 21v-9a5 5 0 0 1 10 0v9M5 7l-2-2M19 7l2-2M12 1v3M9 15h6\"/>", "IPD": "<path d=\"M3 4v17M3 17h18v4M3 11h18v6M6 8h5a3 3 0 0 1 3 3\"/>", "LR": "<path d=\"M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z\"/>", "Death": "<path d=\"M12 3 2 21h20L12 3zM12 9v5M12 18h.01\"/>", "Refer": "<path d=\"m22 2-7 20-4-9-9-4Z M22 2 11 13\"/>", "Dental": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8 14c2 3 6 3 8 0M9 9h.01M15 9h.01\"/>", "Physical": "<path d=\"M2 12h4l3-8 5 16 3-8h5\"/>", "Thai": "<path d=\"M20 4c-9 0-15 3-15 11a5 5 0 0 0 5 5c8 0 11-7 10-16zM4 21c3-7 7-10 12-12\"/>"};
+
+      services.forEach((s) => {
+
+        const article = document.createElement("article");
+
+        article.className = "card";
+
+        article.style.setProperty("--accent", s.color);
+        article.style.setProperty("--accent2", s.color + "bb");
+
+        article.innerHTML = `<div class="card-head"><div class="card-name"><span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${serviceIcons[s.id] || ""}</svg></span>${s.name}</div><span class="trend-unit" id="period-${s.id}">เดือน ก.ย. 69</span></div><div class="amount" id="annual-${s.id}">${formatter.format(s.total)} <small>${s.unit}</small></div><div class="card-note" id="note-${s.id}">จำนวนผู้รับบริการเดือน ก.ย. 69</div><div class="chart-wrap"><canvas id="chart${s.id}" aria-label="กราฟรายเดือน ${s.name}" role="img"></canvas></div><div class="month-reading"><span id="month-${s.id}"></span><strong id="reading-${s.id}"></strong></div>`;
+
+        grid.appendChild(article);
+
+        if (s.data && window.Chart) {
+
+          const ctx = article.querySelector("canvas");
+
+          charts[s.id] = new Chart(ctx, {
+
+            type: "line",
+
+            data: {
+
+              labels: months,
+
+              datasets: [
+
+                {
+
+                  label: s.name,
+
+                  data: s.data,
+
+                  borderColor: s.color,
+
+                  backgroundColor: s.color + "14",
+
+                  pointBackgroundColor: s.color,
+
+                  pointBorderColor: "#fff",
+
+                  pointBorderWidth: 1.5,
+
+                  pointRadius: 4,
+
+                  pointHoverRadius: 7,
+
+                  pointHitRadius: 17,
+
+                  borderWidth: 2.5,
+
+                  fill: true,
+
+                  tension: 0.32,
+
+                },
+
+              ],
+
+            },
+
+            options: {
+
+              responsive: true,
+
+              maintainAspectRatio: false,
+
+              interaction: { mode: "nearest", intersect: false, axis: "x" },
+
+              onClick: (_, elements) => {
+
+                if (elements.length) setSelectedMonth(elements[0].index);
+
+              },
+
+              plugins: {
+
+                legend: { display: false },
+
+                tooltip: {
+
+                  enabled: true,
+
+                  displayColors: false,
+
+                  backgroundColor: "#14263e",
+
+                  padding: 12,
+
+                  titleFont: { family: "Sarabun", size: 13 },
+
+                  bodyFont: { family: "Sarabun", size: 14, weight: "bold" },
+
+                  callbacks: {
+
+                    title: (items) =>
+
+                      items.length ? "เดือน " + months[items[0].dataIndex] : "",
+
+                    label: (item) =>
+
+                      `${s.name}: ${formatter.format(item.parsed.y)} ${s.unit}`,
+
+                  },
+
+                },
+
+              },
+
+              scales: {
+
+                x: {
+
+                  grid: { display: false },
+
+                  border: { display: false },
+
+                  ticks: {
+
+                    font: { family: "Sarabun", size: 11 },
+
+                    color: "#8c9bad",
+
+                    maxRotation: 0,
+
+                    autoSkip: false,
+
+                  },
+
+                },
+
+                y: {
+
+                  beginAtZero: true,
+
+                  grid: { color: "#eff3f9", drawTicks: false },
+
+                  border: { display: false, dash: [3, 4] },
+
+                  ticks: {
+
+                    color: "#98a6b5",
+
+                    font: { family: "Sarabun", size: 10 },
+
+                    maxTicksLimit: 4,
+
+                    precision: 0,
+
+                    padding: 7,
+
+                  },
+
+                },
+
+              },
+
+            },
+
+          });
+
+        } else if (s.data) {
+
+          article.querySelector(".chart-wrap").textContent =
+
+            "ไม่สามารถโหลด Chart.js ได้ กรุณาตรวจสอบอินเทอร์เน็ต";
+
+        } else {
+
+          article.querySelector(".chart-wrap").innerHTML =
+
+            '<div style="height:100%;display:flex;align-items:center;justify-content:center;background:#f7f9fc;border-radius:9px;color:#8796a8;font-size:13px;text-align:center;padding:12px">ยังไม่มีข้อมูลรายเดือนจริง<br>รอเติมข้อมูลจากต้นฉบับ</div>';
+
+        }
+
+      });
+
+      function setSelectedMonth(i) {
+
+        selectedMonth = i;
+
+        document.querySelectorAll(".monthbtn").forEach((btn) => {
+
+          const active = Number(btn.dataset.month) === i;
+
+          btn.classList.toggle("active", active);
+
+          btn.setAttribute("aria-pressed", String(active));
+
+        });
+
+        services.forEach((s) => {
+
+          document.getElementById("month-" + s.id).textContent =
+
+            "เดือน " + months[i];
+
+                      const value = s.data && Number.isFinite(s.data[i]) ? s.data[i] : null;
+            // ตัวเลขใหญ่แสดงเดือนที่เลือก ไม่ใช่ยอดรวมปี
+            document.getElementById("annual-" + s.id).innerHTML =
+              (value === null ? "—" : formatter.format(value)) + " <small>" + s.unit + "</small>";
+            document.getElementById("period-" + s.id).textContent = "เดือน " + months[i];
+            document.getElementById("note-" + s.id).textContent =
+              value === null ? "ยังไม่มีข้อมูลรายเดือน" : "จำนวนผู้รับบริการเดือน " + months[i];
+            document.getElementById("reading-" + s.id).textContent =
+              value === null ? "ไม่มีข้อมูล" : `${formatter.format(value)} ${s.unit}`;
+
+        });
+
+      }
+
+      document.getElementById("monthBar").addEventListener("click", (e) => {
+
+        const b = e.target.closest("[data-month]");
+
+        if (b) setSelectedMonth(Number(b.dataset.month));
+
+      });
+
+      setSelectedMonth(4);
+
+      const input = document.getElementById("excel_input");
+
+      const status = document.getElementById("importStatus");
+
+      if (input && status) input.addEventListener("change", async (e) => {
+
+        const file = e.target.files && e.target.files[0];
+
+        if (!file) return;
+
+        status.textContent = "";
+
+        try {
+
+          if (!window.XLSX) throw new Error("ไม่สามารถโหลดไลบรารี Excel ได้");
+
+          const buf = await file.arrayBuffer();
+
+          const wb = XLSX.read(buf, { type: "array" });
+
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+
+          if (!sheet) throw new Error("ไม่พบชีตข้อมูล");
+
+          const rows = XLSX.utils.sheet_to_json(sheet, {
+
+            header: 1,
+
+            defval: null,
+
+          });
+
+          const line = rows[13];
+
+          if (!line) throw new Error("ไม่พบแถว 14");
+
+          const values = [line[2], line[3]].map((v) =>
+
+            typeof v === "number"
+
+              ? v
+
+              : Number(
+
+                  String(v ?? "")
+
+                    .replace(/,/g, "")
+
+                    .trim(),
+
+                ),
+
+          );
+
+          if (
+
+            values.some(
+
+              (v) => !Number.isFinite(v) || v < 0 || !Number.isInteger(v),
+
+            )
+
+          )
+
+            throw new Error("ค่าที่ C14 หรือ D14 ไม่ใช่จำนวนเต็มที่ถูกต้อง");
+
+          [
+
+            ["Physical", values[0]],
+
+            ["Thai", values[1]],
+
+          ].forEach(([id, val]) => {
+
+            const service = services.find((s) => s.id === id);
+
+            service.total = val;
+
+                          // ยอดรวมปีเปลี่ยนเฉพาะการ์ดสรุปด้านบน ไม่ทับตัวเลขเดือนที่เลือก
+              const mini = [...document.querySelectorAll(".summary .mini")].find(el =>
+                el.querySelector(".mini-label")?.textContent.trim() ===
+                (id === "Physical" ? "กายภาพบำบัด" : "แพทย์แผนไทยฯ"));
+              if (mini) mini.querySelector(".mini-value").innerHTML =
+                formatter.format(val) + " <span>" + service.unit + "</span>";
+
+          });
+
+          status.textContent =
+
+            "อัปเดตยอดรวมกายภาพบำบัดและแพทย์แผนไทยเรียบร้อยแล้ว (เฉพาะหน้านี้)";
+
+        } catch (err) {
+
+          status.textContent = "นำเข้าไม่สำเร็จ: " + err.message;
+
+        } finally {
+
+          input.value = "";
+
+        }
+
+      });
+
+    </script>
+
+  </body>
+
+</html>
