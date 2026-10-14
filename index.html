@@ -1,715 +1,1370 @@
 <!doctype html>
-<html lang="th" class="h-full">
- <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hospital Performance Dashboard</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-  <style>
-        * { font-family: 'Noto Sans Thai', 'Space Grotesk', sans-serif; }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
+
+<html lang="th">
+
+  <head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <title>
+
+      สรุปผลการดำเนินงาน ปีงบประมาณ 2569 | โรงพยาบาลพยาบาลสถานพระบารมี
+
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+
+      href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap"
+
+      rel="stylesheet"
+
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+
+      :root {
+
+        --bg: #f3f6fb;
+
+        --surface: #fff;
+
+        --ink: #172c43;
+
+        --muted: #6c7e93;
+
+        --border: #e4ebf3;
+
+        --blue: #2563eb;
+
+        --shadow: 0 7px 28px rgba(21, 48, 89, 0.045);
+
+      }
+
+      * {
+
+        box-sizing: border-box;
+
+      }
+
+      body {
+
+        font-family: Sarabun, system-ui, sans-serif;
+
+        margin: 0;
+
+        background: var(--bg);
+
+        color: var(--ink);
+
+      }
+
+      button,
+
+      input {
+
+        font: inherit;
+
+      }
+
+      .shell {
+
+        max-width: 1420px;
+
+        margin: 0 auto;
+
+        padding: 30px 26px 60px;
+
+      }
+
+      .top {
+
+        display: flex;
+
+        gap: 18px;
+
+        align-items: flex-start;
+
+        justify-content: space-between;
+
+        margin-bottom: 26px;
+
+      }
+
+      .eyebrow {
+
+        font-size: 12px;
+
+        font-weight: 800;
+
+        letter-spacing: 0.1em;
+
+        text-transform: uppercase;
+
+        color: #4772af;
+
+        margin: 0 0 6px;
+
+      }
+
+      .top h1 {
+
+        font-size: clamp(24px, 3vw, 34px);
+
+        line-height: 1.35;
+
+        margin: 0;
+
+        font-weight: 800;
+
+      }
+
+      .subtitle {
+
+        margin: 8px 0 0;
+
+        color: var(--muted);
+
+        font-size: 15px;
+
+      }
+
+      .fiscal-pill {
+
+        white-space: nowrap;
+
+        background: #e6efff;
+
+        color: #2354a7;
+
+        border: 1px solid #d0e1ff;
+
+        padding: 10px 16px;
+
+        border-radius: 100px;
+
+        font-weight: 700;
+
+      }
+
+      .summary {
+
+        display: grid;
+
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+
+        gap: 15px;
+
+        margin-bottom: 24px;
+
+      }
+
+      .summary .mini {
+
+        background: var(--surface);
+
+        border-radius: 15px;
+
+        border: 1px solid var(--border);
+
+        padding: 18px 20px;
+
+        box-shadow: var(--shadow);
+
+      }
+
+      .mini .mini-label {
+
+        font-size: 13px;
+
+        color: var(--muted);
+
+        font-weight: 600;
+
+      }
+
+      .mini .mini-value {
+
+        font-size: 29px;
+
+        font-weight: 800;
+
+        letter-spacing: -0.035em;
+
+        margin-top: 4px;
+
+        line-height: 1.3;
+
+      }
+
+      .mini .mini-foot {
+
+        font-size: 12px;
+
+        color: #91a0b2;
+
+        margin-top: 5px;
+
+      }
+
+      .mini .mini-value span {
+
+        font-size: 13px;
+
+        color: var(--muted);
+
+        font-weight: 500;
+
+        letter-spacing: 0;
+
+      }
+
+      .heading {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: end;
+
+        gap: 12px;
+
+        margin: 5px 0 15px;
+
+      }
+
+      .heading h2 {
+
+        margin: 0;
+
+        font-size: 20px;
+
+      }
+
+      .heading p {
+
+        color: var(--muted);
+
+        font-size: 13px;
+
+        margin: 5px 0 0;
+
+      }
+
+      .monthbar {
+
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: 8px;
+
+      }
+
+      .monthbtn {
+
+        border: 1px solid #d9e3ee;
+
+        background: #fff;
+
+        border-radius: 9px;
+
+        padding: 7px 12px;
+
+        color: #59708a;
+
+        font-size: 13px;
+
+        cursor: pointer;
+
+      }
+
+      .monthbtn:hover {
+
+        background: #f2f6ff;
+
+      }
+
+      .monthbtn.active {
+
+        background: #285dd9;
+
+        border-color: #285dd9;
+
+        color: white;
+
+      }
+
+      .grid {
+
+        display: grid;
+
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+        gap: 16px;
+
+      }
+
+      .card {
+
+        background: var(--surface);
+
+        border: 1px solid var(--border);
+
+        border-radius: 16px;
+
+        padding: 19px 20px 14px;
+
+        box-shadow: var(--shadow);
+
+        min-width: 0;
+
+      }
+
+      .card-head {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: flex-start;
+
+        gap: 10px;
+
+      }
+
+      .card-name {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        font-size: 16px;
+
+        font-weight: 800;
+
+      }
+
+      .marker {
+
+        width: 9px;
+
+        height: 9px;
+
+        border-radius: 3px;
+
+        background: var(--accent);
+
+        flex-shrink: 0;
+
+      }
+
+      .trend-unit {
+
+        color: var(--muted);
+
+        font-size: 11px;
+
+        border: 1px solid var(--border);
+
+        padding: 4px 7px;
+
+        border-radius: 7px;
+
+        white-space: nowrap;
+
+      }
+
+      .amount {
+
+        font-size: 30px;
+
+        font-weight: 800;
+
+        letter-spacing: -0.03em;
+
+        margin-top: 12px;
+
+      }
+
+      .amount small {
+
+        font-size: 14px;
+
+        font-weight: 500;
+
+        color: var(--muted);
+
+        letter-spacing: 0;
+
+        margin-left: 3px;
+
+      }
+
+      .card-note {
+
+        font-size: 12px;
+
+        color: var(--muted);
+
+        margin-top: 0;
+
+      }
+
+      .chart-wrap {
+
+        height: 155px;
+
+        position: relative;
+
+        margin-top: 8px;
+
+      }
+
+      .chart-wrap canvas {
+
+        width: 100% !important;
+
+        height: 100% !important;
+
+      }
+
+      .month-reading {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        gap: 8px;
+
+        border-top: 1px solid #edf1f7;
+
+        margin-top: 12px;
+
+        padding-top: 10px;
+
+        color: #6f8097;
+
+        font-size: 12px;
+
+      }
+
+      .month-reading strong {
+
+        color: #254968;
+
+        font-size: 13px;
+
+      }
+
+      .info {
+
+        display: flex;
+
+        align-items: start;
+
+        gap: 9px;
+
+        background: #eaf2ff;
+
+        border: 1px solid #d7e7ff;
+
+        border-radius: 12px;
+
+        color: #32577e;
+
+        padding: 12px 16px;
+
+        margin: 0 0 24px;
+
+        font-size: 13px;
+
+      }
+
+      .info b {
+
+        font-weight: 800;
+
+      }
+
+      .bottom {
+
+        margin-top: 26px;
+
+        background: white;
+
+        border: 1px solid var(--border);
+
+        border-radius: 15px;
+
+        padding: 18px 20px;
+
+      }
+
+      .bottom h3 {
+
+        margin: 0 0 5px;
+
+        font-size: 16px;
+
+      }
+
+      .bottom p {
+
+        margin: 0;
+
+        color: var(--muted);
+
+        font-size: 13px;
+
+      }
+
+      .upload-row {
+
+        display: flex;
+
+        gap: 12px;
+
+        align-items: center;
+
+        flex-wrap: wrap;
+
+        margin-top: 14px;
+
+      }
+
+      .upload-row input {
+
+        max-width: 100%;
+
+        font-size: 13px;
+
+      }
+
+      .notice {
+
+        font-size: 12px;
+
+        color: #668096;
+
+        margin-top: 10px;
+
+      }
+
+      .status {
+
+        font-size: 13px;
+
+        color: #24624f;
+
+        margin-top: 8px;
+
+        min-height: 20px;
+
+      }
+
+      .legend {
+
+        font-size: 12px;
+
+        color: #7d8b9d;
+
+        text-align: right;
+
+        margin-top: 12px;
+
+      }
+
+      @media (max-width: 1060px) {
+
+        .grid {
+
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
         }
-        
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+
+        .summary {
+
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
         }
-        
-        @keyframes gradient-shift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+
+      }
+
+      @media (max-width: 650px) {
+
+        .shell {
+
+          padding: 18px 13px 40px;
+
         }
-        
-        @keyframes slide-up {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .top {
+
+          display: block;
+
         }
-        
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
+
+        .fiscal-pill {
+
+          display: inline-block;
+
+          margin-top: 14px;
+
         }
-        
-        @keyframes glow-pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+
+        .grid {
+
+          grid-template-columns: 1fr;
+
         }
-        
-        .animate-float { animation: float 4s ease-in-out infinite; }
-        .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
-        .animate-gradient { 
-            background-size: 200% 200%;
-            animation: gradient-shift 8s ease infinite;
+
+        .summary {
+
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
+          gap: 9px;
+
         }
-        .animate-slide-up { animation: slide-up 0.7s ease-out forwards; opacity: 0; }
-        .animate-glow { animation: glow-pulse 2s ease-in-out infinite; }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+
+        .summary .mini {
+
+          padding: 13px;
+
         }
-        
-        .dark-glass {
-            background: rgba(83, 91, 110, 0.95);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(148, 163, 184, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+        .mini .mini-value {
+
+          font-size: 24px;
+
         }
-        
-        .stat-card {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
+
+        .heading {
+
+          align-items: flex-start;
+
+          flex-direction: column;
+
         }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
+
+        .card {
+
+          padding: 17px;
+
         }
-        
-        .stat-card:hover::before {
-            left: 100%;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-12px) scale(1.03);
-            box-shadow: 0 20px 50px rgba(59, 130, 246, 0.3);
-        }
-        
-        .progress-bar {
-            position: relative;
-            overflow: hidden;
-            border-radius: 10px;
-        }
-        
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-        
-        .blob {
-            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        .chart-container {
-            position: relative;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { 
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-        }
-        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(135deg, #2563eb, #7c3aed); }
-        
-        .stat-number {
-            position: relative;
-            z-index: 1;
-        }
+
+      }
+
     </style>
-  <style>body { box-sizing: border-box; }</style>
- </head>
- <body class="h-full bg-slate-900 text-white overflow-auto">
-  <!-- Animated Background -->
-  <div class="fixed inset-0 overflow-hidden pointer-events-none">
-   <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500/20 blob animate-float" style="filter: blur(80px);"></div>
-   <div class="absolute bottom-0 right-0 w-80 h-80 bg-purple-500/20 blob animate-float" style="filter: blur(80px); animation-delay: -1.5s;"></div>
-   <div class="absolute top-1/2 left-1/2 w-72 h-72 bg-pink-500/10 blob animate-float" style="filter: blur(80px); animation-delay: -3s;"></div>
-  </div>
-  <div class="relative z-10 min-h-full p-4 md:p-8">
-   <!-- Header Section -->
-   <header class="max-w-7xl mx-auto mb-8 animate-slide-up">
-    <div class="dark-glass rounded-3xl p-6 md:p-8">
-     <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-      <div class="flex items-center gap-4">
-       <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-        <img src="logo.png" alt="โลโก้" class="w-8 h-8 text-white object-contain" />
-       </div>
-       <div>
-        <h1 id="hospitalName" class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">โรงพยาบาลพยาบาลสถานพระบารมี</h1>
-        <p class="text-slate-400 flex items-center gap-2 mt-1"><i data-lucide="calendar" class="w-4 h-4"></i> <span>ปีงบประมาณ <span id="fiscalYear" class="text-blue-400 font-semibold">2569</span></span></p>
-       </div>
-      </div>
-      <div class="flex items-center gap-4">
-       <div class="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30">
-        <span class="text-emerald-400 flex items-center gap-2"> <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> ข้อมูลล่าสุด: <span id="latestMonth" class="font-semibold">มีนาคม 2569</span> </span>
-       </div>
-       <a href="/admin.html" title="จัดการข้อมูล (สำหรับแอดมิน)" aria-label="จัดการข้อมูลสำหรับแอดมิน" class="w-10 h-10 rounded-full bg-slate-700/70 hover:bg-slate-600 border border-slate-600 flex items-center justify-center transition-colors">
-        <i data-lucide="settings" class="w-5 h-5 text-slate-300"></i>
-       </a>
-      </div>
-     </div>
-    </div>
-   </header>
-   
-   <!-- Quick Stats Row -->
-   <!-- <div class="max-w-7xl mx-auto mb-8">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.1s;">
-      <div class="flex items-center gap-3">
-       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-        <i data-lucide="users" class="w-6 h-6 text-white"></i>
-       </div>
-       <div>
-        <p class="text-slate-400 text-sm">ผู้ป่วยทั้งหมด</p>
-        <p class="text-2xl font-bold text-white">12,458</p>
-       </div>
-      </div>
-     </div>
-     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.2s;">
-      <div class="flex items-center gap-3">
-       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
-        <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
-       </div>
-       <div>
-        <p class="text-slate-400 text-sm">อัตราการรักษา</p>
-        <p class="text-2xl font-bold text-emerald-400">94.5%</p>
-       </div>
-      </div>
-     </div>
-     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.3s;">
-      <div class="flex items-center gap-3">
-       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-        <i data-lucide="bed" class="w-6 h-6 text-white"></i>
-       </div>
-       <div>
-        <p class="text-slate-400 text-sm">เตียงว่าง</p>
-        <p class="text-2xl font-bold text-purple-400">42</p>
-       </div>
-      </div>
-     </div>
-     <div class="dark-glass rounded-2xl p-4 animate-slide-up" style="animation-delay: 0.4s;">
-      <div class="flex items-center gap-3">
-       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-        <i data-lucide="clock" class="w-6 h-6 text-white"></i>
-       </div>
-       <div>
-        <p class="text-slate-400 text-sm">เวลารอเฉลี่ย</p>
-        <p class="text-2xl font-bold text-amber-400">18 นาที</p>
-       </div>
-      </div>
-     </div>
-    </div>
-   </div> --> <!-- บล็อคข้อมูลยังไม่ใช้ แต่ในอนาคตใช้เป็นแยกสิทธิ์ -->
-   
-   <!-- Main Dashboard Grid -->
-   <div class="max-w-7xl mx-auto mb-8">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-     <!-- OPD Card -->
-     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20 animate-slide-up" style="animation-delay: 0.1s;">
-      <div class="flex items-center justify-between mb-4">
-       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-         <i data-lucide="user-check" class="w-6 h-6 text-white"></i>
-        </div>
+
+  </head>
+
+  <body>
+
+    <main class="shell">
+
+      <header class="top">
+
         <div>
-         <h3 class="font-bold text-slate-800">OPD</h3>
-         <p class="text-sm text-slate-500">ผู้ป่วยนอก</p>
+
+          <p class="eyebrow">Hospital Performance Dashboard</p>
+
+          <h1>สรุปผลการดำเนินงานโรงพยาบาล</h1>
+
+          <p class="subtitle">
+
+            โรงพยาบาลพยาบาลสถานพระบารมี · ภาพรวมสถิติบริการ
+
+          </p>
+
         </div>
-       </div>
-       <div id="trendOPD"></div>
-      </div>
-      <div class="mb-4">
-       <span id="valueOPD" class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ครั้ง</span>
-      </div>
-      <div class="h-32">
-       <canvas id="chartOPD"></canvas>
-      </div>
-     </div><!-- ER Card -->
-     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-orange-500/20 animate-slide-up" style="animation-delay: 0.2s;">
-      <div class="flex items-center justify-between mb-4">
-       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
-         <i data-lucide="siren" class="w-6 h-6 text-white"></i>
+
+        <div class="fiscal-pill">ปีงบประมาณ 2569</div>
+
+      </header>
+
+      <section class="summary" aria-label="ตัวชี้วัดหลัก">
+
+        <div class="mini">
+
+          <div class="mini-label">ผู้ป่วยนอก (OPD)</div>
+
+          <div class="mini-value">37,856 <span>ครั้ง</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
         </div>
+
+        <div class="mini">
+
+          <div class="mini-label">ห้องฉุกเฉิน (ER)</div>
+
+          <div class="mini-value">15,990 <span>ครั้ง</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">ผู้ป่วยใน (IPD)</div>
+
+          <div class="mini-value">3,241 <span>ครั้ง</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">ส่งต่อ (Refer Out)</div>
+
+          <div class="mini-value">1,417 <span>ราย</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">กายภาพบำบัด</div>
+
+          <div class="mini-value">2,956 <span>คน</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">แพทย์แผนไทยฯ</div>
+
+          <div class="mini-value">1,391 <span>คน</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>  
+
+        <div class="mini">
+
+          <div class="mini-label">คลอด (LR)</div>
+
+          <div class="mini-value">44 <span>ราย</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">เสียชีวิต (Death)</div>
+
+          <div class="mini-value">22 <span>ราย</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+        <div class="mini">
+
+          <div class="mini-label">ทันตกรรม</div>
+
+          <div class="mini-value">3,342 <span>ครั้ง</span></div>
+
+          <div class="mini-foot">ยอดรวมปีงบประมาณจากต้นฉบับ</div>
+
+        </div>
+
+      </section>
+
+      <div class="info">
+
+        <span>ⓘ</span>
+
         <div>
-         <h3 class="font-bold text-slate-800">ER</h3>
-         <p class="text-sm text-slate-500">ฉุกเฉิน</p>
+
+          <b>ขอบเขตข้อมูล:</b> ยอดรวมปีงบประมาณแสดงตามไฟล์เดิม
+
+          แต่กราฟรายเดือนมีข้อมูลเฉพาะ <b>พ.ค.–ก.ย. 2569</b> (5 เดือน)
+
+          ไม่ใช่ข้อมูลครบปี
+
         </div>
-       </div>
-       <div id="trendER"></div>
+
       </div>
-      <div class="mb-4">
-       <span id="valueER" class="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ครั้ง</span>
-      </div>
-      <div class="h-32">
-       <canvas id="chartER"></canvas>
-      </div>
-     </div><!-- IPD Card -->
-     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-green-500/20 animate-slide-up" style="animation-delay: 0.3s;">
-      <div class="flex items-center justify-between mb-4">
-       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/30">
-         <i data-lucide="bed" class="w-6 h-6 text-white"></i>
-        </div>
+
+      <div class="heading">
+
         <div>
-         <h3 class="font-bold text-slate-800">IPD</h3>
-         <p class="text-sm text-slate-500">ผู้ป่วยใน</p>
+
+          <h2>แนวโน้มรายเดือน แยกตามบริการ</h2>
+
+          <p>
+
+            ชี้เมาส์หรือแตะจุดกราฟเพื่อดูตัวเลข ·
+
+            เลือกเดือนด้านขวาเพื่อเปรียบเทียบทุกหมวด
+
+          </p>
+
         </div>
-       </div>
-       <div id="trendIPD"></div>
-      </div>
-      <div class="mb-4">
-       <span id="valueIPD" class="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ราย</span>
-      </div>
-      <div class="h-32">
-       <canvas id="chartIPD"></canvas>
-      </div>
-     </div><!-- LR Card -->
-     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20 animate-slide-up" style="animation-delay: 0.4s;">
-      <div class="flex items-center justify-between mb-4">
-       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-         <i data-lucide="heart" class="w-6 h-6 text-white"></i>
+
+        <div
+
+          class="monthbar"
+
+          id="monthBar"
+
+          role="group"
+
+          aria-label="เลือกเดือน"
+
+        >
+
+          <button class="monthbtn active" type="button" data-month="4">
+
+            ก.ย. 69</button
+
+          ><button class="monthbtn" type="button" data-month="3">ส.ค. 69</button
+
+          ><button class="monthbtn" type="button" data-month="2">
+
+            ก.ค. 69</button
+
+          ><button class="monthbtn" type="button" data-month="1">มิ.ย. 69</button
+
+          ><button class="monthbtn" type="button" data-month="0">
+
+            พ.ค. 69
+
+          </button>
+
         </div>
-        <div>
-         <h3 class="font-bold text-slate-800">LR</h3>
-         <p class="text-sm text-slate-500">คลอด</p>
-        </div>
-       </div>
-       <div id="trendLR"></div>
-      </div>
-      <div class="mb-4">
-       <span id="valueLR" class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ราย</span>
-      </div>
-      <div class="h-32">
-       <canvas id="chartLR"></canvas>
-      </div>
-     </div><!-- Death Card -->
-     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-red-500/20 animate-slide-up" style="animation-delay: 0.5s;">
-      <div class="flex items-center justify-between mb-4">
-       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30">
-         <i data-lucide="alert-triangle" class="w-6 h-6 text-white"></i>
-        </div>
-        <div>
-         <h3 class="font-bold text-slate-800">Death</h3>
-         <p class="text-sm text-slate-500">เสียชีวิต/ชันสูตร</p>
-        </div>
-       </div>
-       <div id="trendDeath"></div>
-      </div>
-      <div class="mb-4">
-       <span id="valueDeath" class="text-4xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ราย</span>
-      </div>
-      <div class="h-32">
-       <canvas id="chartDeath"></canvas>
-      </div>
-     </div><!-- Refer Out Card -->
-     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-yellow-500/20 animate-slide-up" style="animation-delay: 0.6s;">
-      <div class="flex items-center justify-between mb-4">
-       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/30">
-         <i data-lucide="send" class="w-6 h-6 text-white"></i>
-        </div>
-        <div>
-         <h3 class="font-bold text-slate-800">Refer Out</h3>
-         <p class="text-sm text-slate-500">ส่งต่อ</p>
-        </div>
-       </div>
-       <div id="trendRefer"></div>
-      </div>
-      <div class="mb-4">
-       <span id="valueRefer"class="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ราย</span>
-      </div>
-      <div class="h-32">
-       <canvas id="chartRefer"></canvas>
-      </div>
-     </div><!-- Dental Card -->
-     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/20 animate-slide-up" style="animation-delay: 0.7s;">
-      <div class="flex items-center justify-between mb-4">
-       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-         <i data-lucide="smile" class="w-6 h-6 text-white"></i>
-        </div>
-        <div>
-         <h3 class="font-bold text-slate-800">ทันตกรรม</h3>
-         <p class="text-sm text-slate-500">ทันตกรรม</p>
-        </div>
-       </div>
-       <div id="trendDental"></div>
-      </div>
-      <div class="mb-4">
-       <span id="valueDental" class="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">ครั้ง</span>
-      </div>
-      <div class="h-32">
-       <canvas id="chartDental"></canvas>
-      </div>
-     </div><!-- Physical Therapy Card -->
-     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-teal-500/20 animate-slide-up" style="animation-delay: 0.8s;">
-      <div class="flex items-center justify-between mb-4">
-       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-teal-500/30">
-         <i data-lucide="activity" class="w-6 h-6 text-white"></i>
-        </div>
-        <div>
-         <h3 class="font-bold text-slate-800">กายภาพ</h3>
-         <p class="text-sm text-slate-500">บำบัด</p>
-        </div>
-       </div>
-       <div id="trendPhysical"></div>
-      </div>
-      <div class="mb-4">
-       <span id="valuePhysical"class="text-4xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">คน</span>
-      </div>
-      <div class="h-32">
-       <canvas id="chartPhysical"></canvas>
-      </div>
-     </div><!-- Thai Medicine Card -->
-     <div class="stat-card glass-card rounded-3xl p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-lime-500/20 animate-slide-up" style="animation-delay: 0.9s;">
-      <div class="flex items-center justify-between mb-4">
-       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-500 to-green-600 flex items-center justify-center shadow-lg shadow-lime-500/30">
-         <i data-lucide="leaf" class="w-6 h-6 text-white"></i>
-        </div>
-        <div>
-         <h3 class="font-bold text-slate-800">แพทย์แผนไทย</h3>
-         <p class="text-sm text-slate-500">ฯ</p>
-        </div>
-       </div>
-       <div id="trendThai"></div>
-      </div>
-      <div class="mb-4">
-       <span id='valueThai' class="text-4xl font-bold bg-gradient-to-r from-lime-600 to-green-600 bg-clip-text text-transparent"></span> <span class="text-slate-500 ml-2">คน</span>
-      </div>
-      <div class="h-32">
-       <canvas id="chartThai"></canvas>
-      </div>
-     </div>
-    </div>
-   </div>
 
-   <div class="max-w-7xl mx-auto mb-8 px-4">
-    <div id="serviceTables" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
-   </div>
+      </div>
 
-   <!-- Footer -->
-   <footer class="max-w-7xl mx-auto text-center py-6 animate-slide-up" style="animation-delay: 1s;">
-    <p class="text-slate-500 text-sm">© 2569 Phrayabalsathanprabaramee Hospital Dashboard </p>
-   </footer>
-  </div>
-<script>
+      <section
 
-// ================= CONFIG DATA =================
-const fallbackServiceSections = [
-    {
-        id: 'physical',
-        title: 'จำนวนบริการกายภาพบำบัด',
-        columns: [
-            { key: 'jointMobilization', label: 'การดัดดึงข้อต่อ' },
-            { key: 'ultrasoundTherapy', label: 'การรักษาด้วยคลื่นเสียง' },
-            { key: 'electricalStimulation', label: 'การกระตุ้นด้วยกระแสไฟฟ้า' },
-            { key: 'paraffinBath', label: 'การแช่พาราฟิน' },
-            { key: 'pelvicTraction', label: 'การดึงหลังด้วยเครื่อง(Pelvic Traction)' },
-            { key: 'acupressureMassage', label: 'การกดจุดและการนวด(Acupressure& Massage)' },
-            { key: 'cervicalTraction', label: 'การดึงคอด้วยเครื่อง(Cervical Traction)' },
-            { key: 'passiveMovement', label: 'Passive Movement' },
-            { key: 'homeProgramEducation', label: 'สอนญาติและผู้ป่วยปฏิบัติตนที่บ้าน' },
-            { key: 'heatCompress', label: 'การประคบด้วยแผ่นความร้อน' }
-        ]
-    },
-    {
-        id: 'thai',
-        title: 'จำนวนบริการแพทย์แผนไทย',
-        columns: [
-            { key: 'herbalMedicine', label: 'จ่ายยาสมุนไพร' },
-            { key: 'herbalMassageCompress', label: 'นวดและประคบสมุนไพร' },
-            { key: 'herbalSteam', label: 'อบไอน้ำสมุนไพร' },
-            { key: 'kneePoultice', label: 'พอกเข่า' },
-            { key: 'postpartumProcedureKit', label: 'ชุดหัตถการสำหรับแม่หลังคลอด' }
-        ]
-    }
-];
+        class="grid"
 
-const serviceThemes = {
-    physical: {
-        icon: 'activity',
-        gradient: 'from-teal-500 to-emerald-600',
-        emphasisClass: 'text-teal-400',
-        animationDelay: '1s'
-    },
-    thai: {
-        icon: 'leaf',
-        gradient: 'from-green-500 to-lime-600',
-        emphasisClass: 'text-green-400',
-        animationDelay: '1.05s'
-    }
-};
+        id="dashboardGrid"
 
-let rawData = [
-    { m: 'ก.พ. 69', opd:3238, er:1261, ipd:211, lr:2, death:1, refer:120, dental:496, physical:210, thai:126 },
-    { m: 'มี.ค. 69', opd:2840, er:1242, ipd:209, lr:2, death:4, refer:118, dental:396, physical:266, thai:134 },
-    { m: 'เม.ย. 69', opd:2624, er:1176, ipd:257, lr:2, death:3, refer:90, dental:361, physical:192, thai:113 },
-    { m: 'พ.ค. 69', opd:3453, er:1078, ipd:236, lr:9, death:1, refer:122, dental:412, physical:208, thai:101 },
-    { m: 'มิ.ย. 69', opd:3194, er:1424, ipd:346, lr:5, death:0, refer:127, dental:444, physical:221, thai:100 }
-];
+        aria-label="กราฟสถิติบริการ"
 
-let serviceSections = fallbackServiceSections;
-let serviceData = {
-    physical: [
-        { m:'ก.พ. 69', jointMobilization:203, ultrasoundTherapy:207, electricalStimulation:68, paraffinBath:14, pelvicTraction:201, acupressureMassage:203, cervicalTraction:21, passiveMovement:81, homeProgramEducation:210, heatCompress:195 },
-        { m:'มี.ค. 69', jointMobilization:252, ultrasoundTherapy:254, electricalStimulation:68, paraffinBath:16, pelvicTraction:252, acupressureMassage:257, cervicalTraction:20, passiveMovement:100, homeProgramEducation:261, heatCompress:248 },
-        { m:'เม.ย. 69', jointMobilization:177, ultrasoundTherapy:168, electricalStimulation:32, paraffinBath:10, pelvicTraction:150, acupressureMassage:162, cervicalTraction:9, passiveMovement:75, homeProgramEducation:164, heatCompress:146 },
-        { m:'พ.ค. 69', jointMobilization:103, ultrasoundTherapy:46, electricalStimulation:197, paraffinBath:6, pelvicTraction:57, acupressureMassage:137, cervicalTraction:18, passiveMovement:190, homeProgramEducation:146, heatCompress:193 },
-        { m:'มิ.ย. 69', jointMobilization:118, ultrasoundTherapy:49, electricalStimulation:217, paraffinBath:7, pelvicTraction:56, acupressureMassage:151, cervicalTraction:23, passiveMovement:98, homeProgramEducation:192, heatCompress:192 }
-    ],
-    thai: [
-        { m:'ก.พ. 69', herbalMedicine:94, herbalMassageCompress:122, herbalSteam:57, kneePoultice:1, postpartumProcedureKit:7 },
-        { m:'มี.ค. 69', herbalMedicine:118, herbalMassageCompress:138, herbalSteam:85, kneePoultice:1, postpartumProcedureKit:5 },
-        { m:'เม.ย. 69', herbalMedicine:76, herbalMassageCompress:111, herbalSteam:52, kneePoultice:2, postpartumProcedureKit:0 },
-        { m:'พ.ค. 69', herbalMedicine:82, herbalMassageCompress:94, herbalSteam:65, kneePoultice:2, postpartumProcedureKit:10 },
-        { m:'มิ.ย. 69', herbalMedicine:76, herbalMassageCompress:94, herbalSteam:61, kneePoultice:0, postpartumProcedureKit:6 }
-    ]
-};
+      ></section>
 
-let last5 = rawData.slice(-5);
-let labels = last5.map(d => d.m);
-const chartInstances = {};
+      <div class="legend">
 
-function mapData(key){
-    return last5.map(d => d[key]);
-}
+        หมายเหตุ: ยอดรวมรายปีในแต่ละการ์ดไม่ได้คำนวณจากกราฟ 5 เดือน
 
-function getLatest(arr){
-    return arr[arr.length-1];
-}
+      </div>
 
-function getPercent(arr){
-    const last = arr[arr.length-1];
-    const prev = arr[arr.length-2];
-    if(prev === undefined || prev === 0) return 0;
-    return ((last-prev)/prev*100).toFixed(1);
-}
+    </main>
 
-function setTrend(el, percent){
-    let icon='trending-up', color='text-emerald-600 bg-emerald-100';
-    if(percent < 0){ icon='trending-down'; color='text-red-600 bg-red-100'; }
-    if(percent == 0){ icon='minus'; color='text-gray-600 bg-gray-100'; }
+    <script>
 
-    el.className = `flex items-center gap-1 px-2 py-1 rounded-full ${color} text-sm`;
-    el.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${percent>0?'+':''}${percent}%`;
-}
+      "use strict";
 
-function createGradient(ctx,c1,c2){
-    const g=ctx.createLinearGradient(0,0,0,150);
-    g.addColorStop(0,c1);
-    g.addColorStop(1,c2);
-    return g;
-}
+      const months = ["พ.ค. 69", "มิ.ย. 69", "ก.ค. 69", "ส.ค. 69", "ก.ย. 69"];
 
-function createChart(id,data,color){
-    const el = document.getElementById(id);
-    if(!el) return;
+      // Data and annual totals preserved from source Dashboard(20261014-044940).html.
 
-    const ctx = el.getContext('2d');
-    if(chartInstances[id]) chartInstances[id].destroy();
+      const services = [
 
-    chartInstances[id] = new Chart(ctx,{
-        type:'line',
-        data:{
-            labels,
-            datasets:[{
-                data,
-                borderColor:color,
-                backgroundColor:createGradient(ctx,color.replace('1)','0.3)'),color.replace('1)','0)')),
-                fill:true,
-                tension:0.4,
-                pointRadius:4
-            }]
+        {
+
+          id: "OPD",
+
+          name: "OPD (ผู้ป่วยนอก)",
+
+          total: 3887,
+
+          unit: "ครั้ง",
+
+          color: "#2563eb",
+
+          data: [3453, 3194, 3146, 3672, 3887],
+
         },
-        options:{
-            responsive:true,
-            maintainAspectRatio:false,
-            plugins:{legend:{display:false}}
+
+        {
+
+          id: "ER",
+
+          name: "ER (ฉุกเฉิน)",
+
+          total: 1437,
+
+          unit: "ครั้ง",
+
+          color: "#e3873b",
+
+          data: [1078, 1424, 1435, 1522, 1437],
+
+        },
+
+        {
+
+          id: "IPD",
+
+          name: "IPD (ผู้ป่วยใน)",
+
+          total: 319,
+
+          unit: "ครั้ง",
+
+          color: "#16a085",
+
+          data: [236, 346, 305, 316, 319],
+
+        },
+
+        {
+
+          id: "LR",
+
+          name: "LR (คลอด)",
+
+          total: 3,
+
+          unit: "ราย",
+
+          color: "#9564d3",
+
+          data: [9, 5, 1, 1, 3],
+
+        },
+
+        {
+
+          id: "Death",
+
+          name: "Death (เสียชีวิต)",
+
+          total: 1,
+
+          unit: "ราย",
+
+          color: "#d45261",
+
+          data: [1, 0, 2, 2, 1],
+
+        },
+
+        {
+
+          id: "Refer",
+
+          name: "Refer Out (ส่งต่อ)",
+
+          total: 83,
+
+          unit: "ราย",
+
+          color: "#d2a42c",
+
+          data: [122, 127, 135, 111, 83],
+
+        },
+
+        {
+
+          id: "Dental",
+
+          name: "ทันตกรรม",
+
+          total: 1001,
+
+          unit: "ครั้ง",
+
+          color: "#94a3b8",
+
+          data: [412,444,348,691,1001],
+
+        },
+
+        {
+
+          id: "Physical",
+
+          name: "กายภาพบำบัด",
+
+          total: 334,
+
+          unit: "คน",
+
+          color: "#1598a5",
+
+          data: [208, 221, 217, 1773, 334],
+
+        },
+
+        {
+
+          id: "Thai",
+
+          name: "แพทย์แผนไทยฯ",
+
+          total: 96,
+
+          unit: "คน",
+
+          color: "#42935a",
+
+          data: [101, 100, 110, 286, 96],
+
+        },
+
+      ];
+
+      const formatter = new Intl.NumberFormat("th-TH", {
+
+        maximumFractionDigits: 0,
+
+      });
+
+      const grid = document.getElementById("dashboardGrid");
+
+      const charts = {};
+
+      let selectedMonth = 4;
+
+      services.forEach((s) => {
+
+        const article = document.createElement("article");
+
+        article.className = "card";
+
+        article.style.setProperty("--accent", s.color);
+
+        article.innerHTML = `<div class="card-head"><div class="card-name"><span class="marker"></span>${s.name}</div><span class="trend-unit" id="period-${s.id}">เดือน ก.ย. 69</span></div><div class="amount" id="annual-${s.id}">${formatter.format(s.total)} <small>${s.unit}</small></div><div class="card-note" id="note-${s.id}">จำนวนผู้รับบริการเดือน ก.ย. 69</div><div class="chart-wrap"><canvas id="chart${s.id}" aria-label="กราฟรายเดือน ${s.name}" role="img"></canvas></div><div class="month-reading"><span id="month-${s.id}"></span><strong id="reading-${s.id}"></strong></div>`;
+
+        grid.appendChild(article);
+
+        if (s.data && window.Chart) {
+
+          const ctx = article.querySelector("canvas");
+
+          charts[s.id] = new Chart(ctx, {
+
+            type: "line",
+
+            data: {
+
+              labels: months,
+
+              datasets: [
+
+                {
+
+                  label: s.name,
+
+                  data: s.data,
+
+                  borderColor: s.color,
+
+                  backgroundColor: s.color + "14",
+
+                  pointBackgroundColor: s.color,
+
+                  pointBorderColor: "#fff",
+
+                  pointBorderWidth: 1.5,
+
+                  pointRadius: 4,
+
+                  pointHoverRadius: 7,
+
+                  pointHitRadius: 17,
+
+                  borderWidth: 2.5,
+
+                  fill: true,
+
+                  tension: 0.32,
+
+                },
+
+              ],
+
+            },
+
+            options: {
+
+              responsive: true,
+
+              maintainAspectRatio: false,
+
+              interaction: { mode: "nearest", intersect: false, axis: "x" },
+
+              onClick: (_, elements) => {
+
+                if (elements.length) setSelectedMonth(elements[0].index);
+
+              },
+
+              plugins: {
+
+                legend: { display: false },
+
+                tooltip: {
+
+                  enabled: true,
+
+                  displayColors: false,
+
+                  backgroundColor: "#14263e",
+
+                  padding: 12,
+
+                  titleFont: { family: "Sarabun", size: 13 },
+
+                  bodyFont: { family: "Sarabun", size: 14, weight: "bold" },
+
+                  callbacks: {
+
+                    title: (items) =>
+
+                      items.length ? "เดือน " + months[items[0].dataIndex] : "",
+
+                    label: (item) =>
+
+                      `${s.name}: ${formatter.format(item.parsed.y)} ${s.unit}`,
+
+                  },
+
+                },
+
+              },
+
+              scales: {
+
+                x: {
+
+                  grid: { display: false },
+
+                  border: { display: false },
+
+                  ticks: {
+
+                    font: { family: "Sarabun", size: 11 },
+
+                    color: "#8c9bad",
+
+                    maxRotation: 0,
+
+                    autoSkip: false,
+
+                  },
+
+                },
+
+                y: {
+
+                  beginAtZero: true,
+
+                  grid: { color: "#eff3f9", drawTicks: false },
+
+                  border: { display: false, dash: [3, 4] },
+
+                  ticks: {
+
+                    color: "#98a6b5",
+
+                    font: { family: "Sarabun", size: 10 },
+
+                    maxTicksLimit: 4,
+
+                    precision: 0,
+
+                    padding: 7,
+
+                  },
+
+                },
+
+              },
+
+            },
+
+          });
+
+        } else if (s.data) {
+
+          article.querySelector(".chart-wrap").textContent =
+
+            "ไม่สามารถโหลด Chart.js ได้ กรุณาตรวจสอบอินเทอร์เน็ต";
+
+        } else {
+
+          article.querySelector(".chart-wrap").innerHTML =
+
+            '<div style="height:100%;display:flex;align-items:center;justify-content:center;background:#f7f9fc;border-radius:9px;color:#8796a8;font-size:13px;text-align:center;padding:12px">ยังไม่มีข้อมูลรายเดือนจริง<br>รอเติมข้อมูลจากต้นฉบับ</div>';
+
         }
-    });
-}
 
-function formatNumber(value){
-    return Number(value || 0).toLocaleString();
-}
+      });
 
-function getSectionTheme(sectionId){
-    return serviceThemes[sectionId] || serviceThemes.physical;
-}
+      function setSelectedMonth(i) {
 
-function renderServiceTables(){
-    const container = document.getElementById('serviceTables');
-    if(!container) return;
+        selectedMonth = i;
 
-    container.innerHTML = serviceSections.map(section => {
-        const theme = getSectionTheme(section.id);
-        const rows = serviceData[section.id] || [];
-        const monthHeaders = rows.map(row => `<th class="text-center py-3 px-4 text-slate-400 font-medium whitespace-nowrap">${row.m}</th>`).join('');
+        document.querySelectorAll(".monthbtn").forEach((btn) => {
 
-        if(!rows.length){
-            return `
-                <div class="dark-glass rounded-3xl p-6 animate-slide-up" style="animation-delay: ${theme.animationDelay};">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${theme.gradient} flex items-center justify-center">
-                            <i data-lucide="${theme.icon}" class="w-5 h-5 text-white"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-white">${section.title}</h3>
-                    </div>
-                    <div class="text-sm text-slate-400">ยังไม่มีข้อมูลสำหรับตารางนี้</div>
-                </div>
-            `;
-        }
+          const active = Number(btn.dataset.month) === i;
 
-        const body = section.columns.map(column => {
-            const cells = rows.map((row, index) => {
-                const emphasis = index === rows.length - 1 ? `${theme.emphasisClass} font-semibold` : 'text-slate-300';
-                return `<td class="text-center py-3 px-4 ${emphasis}">${formatNumber(row[column.key])}</td>`;
-            }).join('');
-            return `
-                <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-colors">
-                    <td class="py-3 px-4 text-white">${column.label}</td>
-                    ${cells}
-                </tr>
-            `;
-        }).join('');
+          btn.classList.toggle("active", active);
 
-        const totals = rows.map(row => section.columns.reduce((sum, column) => sum + Number(row[column.key] || 0), 0));
-        const totalCells = totals.map((total, index) => {
-            const emphasis = index === totals.length - 1 ? `${theme.emphasisClass} font-bold text-lg` : 'text-white font-bold';
-            return `<td class="text-center py-3 px-4 ${emphasis}">${formatNumber(total)}</td>`;
-        }).join('');
+          btn.setAttribute("aria-pressed", String(active));
 
-        return `
-            <div class="dark-glass rounded-3xl p-6 animate-slide-up" style="animation-delay: ${theme.animationDelay};">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${theme.gradient} flex items-center justify-center">
-                        <i data-lucide="${theme.icon}" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-white">${section.title}</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-xs">
-                        <thead>
-                            <tr class="border-b border-slate-700">
-                                <th class="text-left py-3 px-4 text-slate-400 font-medium">ประเภทการรักษา</th>
-                                ${monthHeaders}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${body}
-                            <tr class="bg-slate-800/50">
-                                <td class="py-3 px-4 text-white font-bold">รวมบริการทั้งหมด</td>
-                                ${totalCells}
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function init(){
-    last5 = rawData.slice(-5);
-    labels = last5.map(d => d.m);
-    if(!last5.length) return;
-
-    const map = [
-        ['opd','valueOPD','trendOPD','chartOPD','rgba(59,130,246,1)'],
-        ['er','valueER','trendER','chartER','rgba(249,115,22,1)'],
-        ['ipd','valueIPD','trendIPD','chartIPD','rgba(16,185,129,1)'],
-        ['lr','valueLR','trendLR','chartLR','rgba(168,85,247,1)'],
-        ['death','valueDeath','trendDeath','chartDeath','rgba(220,38,38,1)'],
-        ['refer','valueRefer','trendRefer','chartRefer','rgba(234,179,8,1)'],
-        ['dental','valueDental','trendDental','chartDental','rgba(6,182,212,1)'],
-        ['physical','valuePhysical','trendPhysical','chartPhysical','rgba(20,184,166,1)'],
-        ['thai','valueThai','trendThai','chartThai','rgba(34,197,94,1)'],
-    ];
-
-    map.forEach(([key,valId,trendId,chartId,color])=>{
-        const data = mapData(key);
-        const valEl = document.getElementById(valId);
-        if(valEl) valEl.innerText = getLatest(data).toLocaleString();
-
-        const trendEl = document.getElementById(trendId);
-        if(trendEl) setTrend(trendEl, getPercent(data));
-
-        createChart(chartId, data, color);
-    });
-
-    document.getElementById('latestMonth').innerText = labels[labels.length-1];
-    renderServiceTables();
-    lucide.createIcons();
-}
-
-async function syncDashboard(){
-    try {
-        const response = await fetch(`/api/dashboard?t=${Date.now()}`, { cache: 'no-store' });
-        if(!response.ok) throw new Error('API unavailable');
-        const result = await response.json();
-        if(Array.isArray(result.data) && result.data.length) {
-            const changed = JSON.stringify(result.data) !== JSON.stringify(rawData);
-            rawData = result.data;
-            if(changed) init();
-        }
-    } catch(error) {
-        console.warn('ใช้ข้อมูลสำรองในหน้าเว็บ:', error.message);
-    }
-}
-
-async function syncServices(){
-    try {
-        const response = await fetch(`/api/services?t=${Date.now()}`, { cache: 'no-store' });
-        if(!response.ok) throw new Error('API unavailable');
-        const result = await response.json();
-        const sectionsChanged = result.sections && JSON.stringify(result.sections) !== JSON.stringify(serviceSections);
-        if(result.sections) serviceSections = result.sections;
-        if(result.services) {
-            const changed = JSON.stringify(result.services) !== JSON.stringify(serviceData);
-            serviceData = result.services;
-            if(changed || sectionsChanged) init();
-        }
-    } catch(error) {
-        console.warn('ใช้ข้อมูลบริการสำรองในหน้าเว็บ:', error.message);
-    }
-}
-
-async function syncAll(){
-    await Promise.all([syncDashboard(), syncServices()]);
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-    init();
-    await syncAll();
-    setInterval(syncAll, 10000);
-    if('BroadcastChannel' in window) {
-        const channel = new BroadcastChannel('hospital-dashboard');
-        channel.addEventListener('message', event => {
-            if(event.data === 'updated') syncAll();
         });
-    }
-});
 
-</script>
+        services.forEach((s) => {
+
+          document.getElementById("month-" + s.id).textContent =
+
+            "เดือน " + months[i];
+
+                      const value = s.data && Number.isFinite(s.data[i]) ? s.data[i] : null;
+            // ตัวเลขใหญ่แสดงเดือนที่เลือก ไม่ใช่ยอดรวมปี
+            document.getElementById("annual-" + s.id).innerHTML =
+              (value === null ? "—" : formatter.format(value)) + " <small>" + s.unit + "</small>";
+            document.getElementById("period-" + s.id).textContent = "เดือน " + months[i];
+            document.getElementById("note-" + s.id).textContent =
+              value === null ? "ยังไม่มีข้อมูลรายเดือน" : "จำนวนผู้รับบริการเดือน " + months[i];
+            document.getElementById("reading-" + s.id).textContent =
+              value === null ? "ไม่มีข้อมูล" : `${formatter.format(value)} ${s.unit}`;
+
+        });
+
+      }
+
+      document.getElementById("monthBar").addEventListener("click", (e) => {
+
+        const b = e.target.closest("[data-month]");
+
+        if (b) setSelectedMonth(Number(b.dataset.month));
+
+      });
+
+      setSelectedMonth(4);
+
+      const input = document.getElementById("excel_input");
+
+      const status = document.getElementById("importStatus");
+
+      input.addEventListener("change", async (e) => {
+
+        const file = e.target.files && e.target.files[0];
+
+        if (!file) return;
+
+        status.textContent = "";
+
+        try {
+
+          if (!window.XLSX) throw new Error("ไม่สามารถโหลดไลบรารี Excel ได้");
+
+          const buf = await file.arrayBuffer();
+
+          const wb = XLSX.read(buf, { type: "array" });
+
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+
+          if (!sheet) throw new Error("ไม่พบชีตข้อมูล");
+
+          const rows = XLSX.utils.sheet_to_json(sheet, {
+
+            header: 1,
+
+            defval: null,
+
+          });
+
+          const line = rows[13];
+
+          if (!line) throw new Error("ไม่พบแถว 14");
+
+          const values = [line[2], line[3]].map((v) =>
+
+            typeof v === "number"
+
+              ? v
+
+              : Number(
+
+                  String(v ?? "")
+
+                    .replace(/,/g, "")
+
+                    .trim(),
+
+                ),
+
+          );
+
+          if (
+
+            values.some(
+
+              (v) => !Number.isFinite(v) || v < 0 || !Number.isInteger(v),
+
+            )
+
+          )
+
+            throw new Error("ค่าที่ C14 หรือ D14 ไม่ใช่จำนวนเต็มที่ถูกต้อง");
+
+          [
+
+            ["Physical", values[0]],
+
+            ["Thai", values[1]],
+
+          ].forEach(([id, val]) => {
+
+            const service = services.find((s) => s.id === id);
+
+            service.total = val;
+
+                          // ยอดรวมปีเปลี่ยนเฉพาะการ์ดสรุปด้านบน ไม่ทับตัวเลขเดือนที่เลือก
+              const mini = [...document.querySelectorAll(".summary .mini")].find(el =>
+                el.querySelector(".mini-label")?.textContent.trim() ===
+                (id === "Physical" ? "กายภาพบำบัด" : "แพทย์แผนไทยฯ"));
+              if (mini) mini.querySelector(".mini-value").innerHTML =
+                formatter.format(val) + " <span>" + service.unit + "</span>";
+
+          });
+
+          status.textContent =
+
+            "อัปเดตยอดรวมกายภาพบำบัดและแพทย์แผนไทยเรียบร้อยแล้ว (เฉพาะหน้านี้)";
+
+        } catch (err) {
+
+          status.textContent = "นำเข้าไม่สำเร็จ: " + err.message;
+
+        } finally {
+
+          input.value = "";
+
+        }
+
+      });
+
+    </script>
+
+  </body>
+
 </html>
